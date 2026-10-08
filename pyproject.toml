@@ -45,6 +45,10 @@ extend-exclude = ["**/migrations/**", "*.md"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "DJ", "RUF", "N", "PT"]
 
+[tool.ruff.lint.per-file-ignores]
+# Error names are fixed by the ubiquitous language (SPEC §4.3), not suffixed with "Error".
+"contexts/scheduling/domain/errors.py" = ["N818"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
