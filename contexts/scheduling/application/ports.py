@@ -1,7 +1,8 @@
 """Ports the application layer depends on; infrastructure provides the adapters."""
 
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import date
 from types import TracebackType
@@ -31,6 +32,7 @@ __all__ = [
     "AppointmentReadModel",
     "AvailabilityCache",
     "AvailabilityReadModel",
+    "BookingObserver",
     "CatalogGateway",
     "Clock",
     "EventPublisher",
@@ -38,6 +40,7 @@ __all__ = [
     "StoredResponse",
     "Transaction",
     "UnitOfWork",
+    "UseCaseTelemetry",
 ]
 
 
@@ -133,3 +136,23 @@ class IdempotencyStore(Protocol):
         ...
 
     def complete(self, key: str, status: int, body: dict[str, Any]) -> None: ...
+
+
+class UseCaseTelemetry(Protocol):
+    """Tracing span + metrics for one use-case invocation (SPEC §9)."""
+
+    def span(
+        self, use_case: str, attributes: Mapping[str, object]
+    ) -> AbstractContextManager[None]: ...
+
+    def record(self, use_case: str, outcome: str, duration_seconds: float) -> None:
+        """Called inside the span once the outcome is known."""
+        ...
+
+
+class BookingObserver(Protocol):
+    """Contention signals from inside the booking use case."""
+
+    def booking_conflict(self) -> None: ...
+
+    def booking_retry(self, attempt: int) -> None: ...

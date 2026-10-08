@@ -152,3 +152,28 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 **Corrected.**
 - The first purge-command test reused the frozen test clock, but the command uses wall-clock time. It was rewritten to use real timestamps rather than injecting a clock into an ops command.
 - mypy flagged `encode=dict` in the test as not matching `Callable[[R], dict]`. It now uses an explicit, typed identity.
+
+## Milestone 8 — Observability (2026-10-08)
+
+**Intent.** Logging/metrics/tracing decorators and middleware, compose collector config (§9).
+
+**Produced.**
+- Application: `Instrumented` decorator, `UseCaseTelemetry`/`BookingObserver` ports, retry/conflict hooks in the booking handler.
+- Infrastructure: `telemetry/{metrics,logging,tracing,middleware}.py`.
+- Runtime: `gunicorn.conf.py`, WhiteNoise, prod settings in compose, `ops/prometheus-alerts.yml`, a detailed OTel collector config, and new Makefile targets (`superuser`, `purge-keys`, `logs`).
+
+**Verified.**
+- 5 application tests (outcome codes, span attributes, log fields, conflict/retry counting).
+- 4 API tests: `/metrics` deltas per outcome, cache hit/miss counts, JSON log line with the correlation id, use-case span with an `outcome` attribute via an in-memory exporter.
+- Live with 4 gunicorn workers:
+  - `/metrics` aggregates all workers (5 hits / 3 misses over 8 availability calls).
+  - A JSON log line carries `correlation_id`, `route`, `trace_id` and `span_id`.
+  - A client `traceparent` (`4bf92f35…`) is propagated to every SQL span in the collector.
+  - Prometheus loaded the 4 alert rules.
+  - Admin static files and Swagger UI return 200 under `DEBUG=False`.
+- 252 tests passing. All checks green.
+
+**Corrected.**
+- The collector at first showed no span names, because compose had not recreated it after its mounted config changed. `docker compose restart` fixed it. Worth knowing for the demo.
+- WhiteNoise warned in every test about the missing `STATIC_ROOT`. It is now container-only, not silenced.
+- The gunicorn hook's `type: ignore` used the wrong error code. mypy pointed to the exact one needed.

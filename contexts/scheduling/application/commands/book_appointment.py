@@ -1,5 +1,6 @@
 """Use case: book an appointment (SPEC §4.5)."""
 
+import logging
 import random
 import time
 import uuid
@@ -14,7 +15,13 @@ from contexts.scheduling.application.dto import (
     VehicleSummary,
 )
 from contexts.scheduling.application.errors import NotFoundError
-from contexts.scheduling.application.ports import CatalogGateway, Clock, EventPublisher, UnitOfWork
+from contexts.scheduling.application.ports import (
+    BookingObserver,
+    CatalogGateway,
+    Clock,
+    EventPublisher,
+    UnitOfWork,
+)
 from contexts.scheduling.domain.errors import (
     NoCapacityAvailable,
     ResourceConflict,
@@ -41,6 +48,16 @@ from contexts.scheduling.domain.services.resource_allocator import ResourceAlloc
 
 BACKOFF_SECONDS = (0.01, 0.05)
 
+logger = logging.getLogger(__name__)
+
+
+class _NullObserver:
+    def booking_conflict(self) -> None:
+        pass
+
+    def booking_retry(self, attempt: int) -> None:
+        pass
+
 
 def _new_appointment_id() -> AppointmentId:
     return AppointmentId(uuid.uuid4())
@@ -66,6 +83,7 @@ class BookAppointmentHandler:
         max_retries: int = 3,
         sleep: Callable[[float], None] = time.sleep,
         new_id: Callable[[], AppointmentId] = _new_appointment_id,
+        observer: BookingObserver | None = None,
     ) -> None:
         self._uow = uow
         self._catalog = catalog
@@ -74,6 +92,7 @@ class BookAppointmentHandler:
         self._max_retries = max_retries
         self._sleep = sleep
         self._new_id = new_id
+        self._observer: BookingObserver = observer or _NullObserver()
         self._allocator = ResourceAllocator()
         self._slot_alignment = SlotAlignmentPolicy()
         self._opening_hours = OpeningHoursPolicy()
@@ -86,8 +105,14 @@ class BookAppointmentHandler:
             try:
                 return self._book(context)
             except ResourceConflict as conflict:
+                self._observer.booking_conflict()
                 if attempt == self._max_retries:
                     raise NoCapacityAvailable() from conflict
+                self._observer.booking_retry(attempt + 1)
+                logger.info(
+                    "booking.retry",
+                    extra={"attempt": attempt + 1, "dealership_id": command.dealership_id},
+                )
                 self._sleep(random.uniform(*BACKOFF_SECONDS))
         raise AssertionError("unreachable")  # pragma: no cover
 

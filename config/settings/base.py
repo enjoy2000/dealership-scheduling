@@ -7,6 +7,8 @@ from typing import Any
 import dj_database_url
 import django_stubs_ext
 
+from contexts.scheduling.infrastructure.telemetry.logging import configure_structlog, logging_config
+
 # Lets admin classes use generics like ModelAdmin[Model] at runtime (typed with django-stubs).
 django_stubs_ext.monkeypatch()
 
@@ -26,19 +28,23 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "rest_framework",
     "drf_spectacular",
+    "django_prometheus",
     "contexts.catalog",
     "contexts.scheduling.infrastructure.persistence",
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "contexts.scheduling.infrastructure.telemetry.middleware.CorrelationIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -69,6 +75,8 @@ DATABASES = {
     )
 }
 DATABASES["default"]["OPTIONS"] = {"options": f"-c statement_timeout={DB_STATEMENT_TIMEOUT_MS}"}
+# Same PostgreSQL backend, wrapped to export query/connection metrics.
+DATABASES["default"]["ENGINE"] = "django_prometheus.db.backends.postgresql"
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CACHES = {
@@ -87,6 +95,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 REST_FRAMEWORK: dict[str, Any] = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
@@ -120,3 +132,9 @@ BOOKING_MAX_RETRIES = int(os.environ.get("BOOKING_MAX_RETRIES", "3"))
 AVAILABILITY_CACHE_TTL_SECONDS = int(os.environ.get("AVAILABILITY_CACHE_TTL_SECONDS", "5"))
 IDEMPOTENCY_TTL_HOURS = int(os.environ.get("IDEMPOTENCY_TTL_HOURS", "24"))
 OTEL_EXPORTER_OTLP_ENDPOINT = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+
+# Observability (SPEC §9): JSON logs to stdout with correlation ids.
+configure_structlog()
+LOGGING = logging_config(
+    level=os.environ.get("LOG_LEVEL", "INFO"), fmt=os.environ.get("LOG_FORMAT", "json")
+)

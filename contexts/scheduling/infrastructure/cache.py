@@ -9,6 +9,7 @@ from datetime import date
 from django.core.cache import cache
 
 from contexts.scheduling.application.dto import Availability
+from contexts.scheduling.infrastructure.telemetry.metrics import AVAILABILITY_CACHE_REQUESTS
 
 _VERSION_TTL_SECONDS = 2 * 24 * 3600
 
@@ -29,7 +30,9 @@ class DjangoAvailabilityCache:
         if self._ttl <= 0:
             return None
         value = cache.get(self._key(dealership_id, service_type_id, day))
-        return value if isinstance(value, Availability) else None
+        hit = isinstance(value, Availability)
+        AVAILABILITY_CACHE_REQUESTS.labels(result="hit" if hit else "miss").inc()
+        return value if hit else None
 
     def set(self, value: Availability) -> None:
         if self._ttl > 0:

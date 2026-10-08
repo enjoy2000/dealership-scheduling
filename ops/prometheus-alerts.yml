@@ -1,0 +1,35 @@
+# SLO alerts from SPEC §2.1 / §9.
+groups:
+  - name: scheduler-slos
+    rules:
+      - alert: BookingLatencyP95High
+        expr: histogram_quantile(0.95, sum by (le) (rate(booking_duration_seconds_bucket[5m]))) > 0.3
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "Booking p95 latency above 300 ms"
+
+      - alert: HttpServerErrorRateHigh
+        expr: |
+          sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]))
+            / sum(rate(django_http_responses_total_by_status_total[5m])) > 0.001
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "5xx rate above 0.1%"
+
+      - alert: BookingRetriesElevated
+        expr: sum(rate(booking_retries_total[5m])) / sum(rate(booking_requests_total[5m])) > 0.2
+        for: 10m
+        labels: {severity: ticket}
+        annotations:
+          summary: "More than 20% of bookings retry: hot-slot contention"
+
+      - alert: AvailabilityCacheHitRatioLow
+        expr: |
+          sum(rate(availability_cache_requests_total{result="hit"}[10m]))
+            / sum(rate(availability_cache_requests_total[10m])) < 0.5
+        for: 15m
+        labels: {severity: ticket}
+        annotations:
+          summary: "Availability cache hit ratio below 50%"

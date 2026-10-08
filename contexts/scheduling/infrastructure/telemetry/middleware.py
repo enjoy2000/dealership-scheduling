@@ -1,9 +1,11 @@
 """Correlation id per request: taken from `X-Correlation-ID` (or `X-Request-ID`) when
-supplied, otherwise generated; exposed on the request, the response and in logs."""
+supplied, otherwise generated; exposed on the request, the response and in logs, where
+the matched route is bound too."""
 
 import re
 import uuid
 from collections.abc import Callable
+from typing import Any
 
 import structlog
 from django.http import HttpRequest, HttpResponse
@@ -25,3 +27,13 @@ class CorrelationIdMiddleware:
         response = self.get_response(request)
         response[HEADER] = correlation_id
         return response
+
+    def process_view(
+        self,
+        request: HttpRequest,
+        view_func: Callable[..., Any],
+        view_args: tuple[Any, ...],
+        view_kwargs: dict[str, Any],
+    ) -> None:
+        if request.resolver_match is not None:
+            structlog.contextvars.bind_contextvars(route=request.resolver_match.route)

@@ -13,6 +13,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz, name="healthz"),
     path("readyz", readyz, name="readyz"),
+    path("", include("django_prometheus.urls")),  # /metrics
     path("api/v1/", include("contexts.scheduling.interface.api.urls")),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),

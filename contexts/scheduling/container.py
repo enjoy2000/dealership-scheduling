@@ -13,8 +13,15 @@ from django.conf import settings
 
 from contexts.scheduling.application.commands.book_appointment import BookAppointmentHandler
 from contexts.scheduling.application.commands.cancel_appointment import CancelAppointmentHandler
-from contexts.scheduling.application.decorators import Idempotent
-from contexts.scheduling.application.dto import AppointmentDetails, BookAppointmentCommand
+from contexts.scheduling.application.decorators import Idempotent, Instrumented, Replayable
+from contexts.scheduling.application.dto import (
+    AppointmentDetails,
+    Availability,
+    BookAppointmentCommand,
+    CancelAppointmentCommand,
+    GetAppointmentQuery,
+    ListAvailabilityQuery,
+)
 from contexts.scheduling.application.event_handlers import InvalidateAvailability
 from contexts.scheduling.application.ports import Clock
 from contexts.scheduling.application.queries.get_appointment import GetAppointmentHandler
@@ -34,6 +41,7 @@ from contexts.scheduling.infrastructure.persistence.read_models import (
     DjangoAvailabilityReadModel,
 )
 from contexts.scheduling.infrastructure.persistence.unit_of_work import DjangoUnitOfWork
+from contexts.scheduling.infrastructure.telemetry.metrics import PrometheusTelemetry
 
 
 class Container:
@@ -45,13 +53,16 @@ class Container:
         self.uow = DjangoUnitOfWork()
         self.catalog = DjangoCatalogGateway()
         self.events = InProcessEventPublisher()
+        self.telemetry = PrometheusTelemetry()
         self.availability_cache = DjangoAvailabilityCache(settings.AVAILABILITY_CACHE_TTL_SECONDS)
         invalidate = InvalidateAvailability(cache=self.availability_cache, catalog=self.catalog)
         self.events.subscribe(AppointmentConfirmed, invalidate)
         self.events.subscribe(AppointmentCancelled, invalidate)
 
     @cached_property
-    def book_appointment(self) -> Idempotent[BookAppointmentCommand, AppointmentDetails]:
+    def book_appointment(
+        self,
+    ) -> Callable[[str, BookAppointmentCommand], Replayable[AppointmentDetails]]:
         handler = BookAppointmentHandler(
             uow=self.uow,
             catalog=self.catalog,
@@ -59,8 +70,9 @@ class Container:
             events=self.events,
             max_retries=settings.BOOKING_MAX_RETRIES,
             sleep=self.sleep,
+            observer=self.telemetry,
         )
-        return Idempotent(
+        idempotent = Idempotent(
             handler,
             store=DjangoIdempotencyStore(
                 clock=self.clock, ttl=timedelta(hours=settings.IDEMPOTENCY_TTL_HOURS)
@@ -70,23 +82,29 @@ class Container:
             decode=appointment_details_from_json,
             status=201,
         )
+        return Instrumented("book_appointment", idempotent, telemetry=self.telemetry)
 
     @cached_property
-    def cancel_appointment(self) -> CancelAppointmentHandler:
-        return CancelAppointmentHandler(uow=self.uow, clock=self.clock, events=self.events)
+    def cancel_appointment(self) -> Callable[[CancelAppointmentCommand], None]:
+        handler = CancelAppointmentHandler(uow=self.uow, clock=self.clock, events=self.events)
+        return Instrumented("cancel_appointment", handler, telemetry=self.telemetry)
 
     @cached_property
-    def get_appointment(self) -> GetAppointmentHandler:
-        return GetAppointmentHandler(read_model=DjangoAppointmentReadModel(), catalog=self.catalog)
+    def get_appointment(self) -> Callable[[GetAppointmentQuery], AppointmentDetails]:
+        handler = GetAppointmentHandler(
+            read_model=DjangoAppointmentReadModel(), catalog=self.catalog
+        )
+        return Instrumented("get_appointment", handler, telemetry=self.telemetry)
 
     @cached_property
-    def list_availability(self) -> ListAvailabilityHandler:
-        return ListAvailabilityHandler(
+    def list_availability(self) -> Callable[[ListAvailabilityQuery], Availability]:
+        handler = ListAvailabilityHandler(
             read_model=DjangoAvailabilityReadModel(),
             catalog=self.catalog,
             cache=self.availability_cache,
             clock=self.clock,
         )
+        return Instrumented("list_availability", handler, telemetry=self.telemetry)
 
 
 _container: Container | None = None

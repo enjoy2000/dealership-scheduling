@@ -18,8 +18,11 @@ RUN uv sync --frozen --no-install-project
 
 COPY . .
 
+# Static files for the admin and Swagger UI, served by WhiteNoise.
+RUN DJANGO_SETTINGS_MODULE=config.settings.dev python manage.py collectstatic --noinput -v 0
+
 RUN useradd --create-home --uid 1000 app && chown -R app /app
 USER app
 
 EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--graceful-timeout", "30", "--access-logfile", "-"]
+CMD ["gunicorn", "config.wsgi:application", "--config", "gunicorn.conf.py"]

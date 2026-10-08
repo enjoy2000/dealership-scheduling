@@ -3,6 +3,8 @@
 import dataclasses
 import hashlib
 import json
+import logging
+import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -10,7 +12,14 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from contexts.scheduling.application.errors import IdempotencyConflictError
-from contexts.scheduling.application.ports import IdempotencyStore, StoredResponse, Transaction
+from contexts.scheduling.application.ports import (
+    IdempotencyStore,
+    StoredResponse,
+    Transaction,
+    UseCaseTelemetry,
+)
+
+logger = logging.getLogger("scheduling.use_cases")
 
 
 @dataclass(frozen=True)
@@ -80,3 +89,58 @@ class Idempotent[C, R]:
                 "The Idempotency-Key was already used with a different payload."
             )
         return Replayable(self._decode(stored.body), replayed=True)
+
+
+def _attributes(args: tuple[Any, ...]) -> dict[str, object]:
+    for arg in args:
+        dealership_id = getattr(arg, "dealership_id", None)
+        if isinstance(dealership_id, int):
+            return {"dealership_id": dealership_id}
+    return {}
+
+
+def _outcome(error: Exception) -> str:
+    code = getattr(error, "code", None)
+    return code if isinstance(code, str) else "internal_error"
+
+
+class Instrumented[**P, R]:
+    """`logged_and_measured` (§4.4): a span, outcome/duration metrics and one structured
+    log line per use-case call. Outcome is `success` or the error's stable code."""
+
+    def __init__(
+        self,
+        use_case: str,
+        handler: Callable[P, R],
+        *,
+        telemetry: UseCaseTelemetry,
+        timer: Callable[[], float] = time.perf_counter,
+    ) -> None:
+        self._use_case = use_case
+        self._handler = handler
+        self._telemetry = telemetry
+        self._timer = timer
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        attributes = _attributes(args)
+        with self._telemetry.span(self._use_case, attributes):
+            started = self._timer()
+            outcome = "success"
+            try:
+                return self._handler(*args, **kwargs)
+            except Exception as error:
+                outcome = _outcome(error)
+                raise
+            finally:
+                duration = self._timer() - started
+                self._telemetry.record(self._use_case, outcome, duration)
+                logger.log(
+                    logging.ERROR if outcome == "internal_error" else logging.INFO,
+                    "use_case.completed",
+                    extra={
+                        "use_case": self._use_case,
+                        "outcome": outcome,
+                        "duration_ms": round(duration * 1000, 2),
+                        **attributes,
+                    },
+                )

@@ -10,8 +10,10 @@ processors:
   batch: {}
 
 exporters:
+  # Prints spans to the collector log (`docker compose logs otel-collector`).
+  # Swap for Jaeger/Tempo/Honeycomb in a real deployment.
   debug:
-    verbosity: basic
+    verbosity: detailed
 
 service:
   pipelines:
