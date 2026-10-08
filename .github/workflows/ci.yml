@@ -26,3 +26,9 @@ jobs:
         run: uv run pytest --cov --cov-report=term-missing
         env:
           DATABASE_URL: postgres://scheduler:scheduler@localhost:5432/scheduler
+      - name: Migrations in sync with models
+        run: uv run python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+      - name: Docker image builds
+        run: docker build -t scheduler:ci .

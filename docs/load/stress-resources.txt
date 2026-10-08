@@ -1,0 +1,6 @@
+15:52:52 db_conns=3 scheduling-web-1=312.75% scheduling-db-1=50.59% 
+15:53:02 db_conns=5 scheduling-web-1=330.56% scheduling-db-1=66.44% 
+15:53:12 db_conns=5 scheduling-web-1=313.52% scheduling-db-1=64.66% 
+15:53:22 db_conns=5 scheduling-web-1=318.16% scheduling-db-1=65.14% 
+15:53:32 db_conns=5 scheduling-web-1=315.72% scheduling-db-1=61.73% 
+15:53:42 db_conns=5 scheduling-web-1=312.53% scheduling-db-1=62.77% 

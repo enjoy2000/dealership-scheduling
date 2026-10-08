@@ -1,0 +1,9 @@
+# Overlay for load tests: one client IP generates all traffic, so per-client throttles
+# are lifted; everything else matches the normal stack.
+services:
+  web:
+    environment:
+      # Stress profile (550 TPS) needs ~16 sync workers on the test host; 4 meet the design target.
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-16}
+      THROTTLE_BOOKING_RATE: 100000/min
+      THROTTLE_AVAILABILITY_RATE: 1000000/min

@@ -1,0 +1,408 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: /load/k6.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 5500 max VUs, 1m30s max duration (incl. graceful stop):
+              * availability: 500.00 iterations/s for 1m0s (maxVUs: 1000-5000, exec: availability, gracefulStop: 30s)
+              * booking: 50.00 iterations/s for 1m0s (maxVUs: 100-500, exec: book, gracefulStop: 30s)
+
+
+running (0m00.9s), 0131/1100 VUs, 386 complete and 0 interrupted iterations
+availability   [   2% ] 0119/1000 VUs  0m00.9s/1m0s  500.00 iters/s
+booking        [   2% ] 012/100 VUs    0m00.9s/1m0s  50.00 iters/s
+
+running (0m01.9s), 0269/1100 VUs, 798 complete and 0 interrupted iterations
+availability   [   3% ] 0244/1000 VUs  0m01.9s/1m0s  500.00 iters/s
+booking        [   3% ] 025/100 VUs    0m01.9s/1m0s  50.00 iters/s
+
+running (0m02.9s), 0400/1100 VUs, 1216 complete and 0 interrupted iterations
+availability   [   5% ] 0359/1000 VUs  0m02.9s/1m0s  500.00 iters/s
+booking        [   5% ] 041/100 VUs    0m02.9s/1m0s  50.00 iters/s
+
+running (0m03.9s), 0516/1100 VUs, 1651 complete and 0 interrupted iterations
+availability   [   7% ] 0467/1000 VUs  0m03.9s/1m0s  500.00 iters/s
+booking        [   7% ] 049/100 VUs    0m03.9s/1m0s  50.00 iters/s
+
+running (0m04.9s), 0618/1100 VUs, 2099 complete and 0 interrupted iterations
+availability   [   8% ] 0556/1000 VUs  0m04.9s/1m0s  500.00 iters/s
+booking        [   8% ] 062/100 VUs    0m04.9s/1m0s  50.00 iters/s
+
+running (0m05.9s), 0712/1100 VUs, 2555 complete and 0 interrupted iterations
+availability   [  10% ] 0640/1000 VUs  0m05.9s/1m0s  500.00 iters/s
+booking        [  10% ] 072/100 VUs    0m05.9s/1m0s  50.00 iters/s
+
+running (0m06.9s), 0814/1100 VUs, 3003 complete and 0 interrupted iterations
+availability   [  12% ] 0730/1000 VUs  0m06.9s/1m0s  500.00 iters/s
+booking        [  12% ] 084/100 VUs    0m06.9s/1m0s  50.00 iters/s
+
+running (0m07.9s), 0933/1100 VUs, 3434 complete and 0 interrupted iterations
+availability   [  13% ] 0837/1000 VUs  0m07.9s/1m0s  500.00 iters/s
+booking        [  13% ] 096/100 VUs    0m07.9s/1m0s  50.00 iters/s
+
+running (0m08.9s), 1029/1104 VUs, 3883 complete and 0 interrupted iterations
+availability   [  15% ] 0927/1000 VUs  0m08.9s/1m0s  500.00 iters/s
+booking        [  15% ] 102/104 VUs    0m08.9s/1m0s  50.00 iters/s
+
+running (0m09.9s), 1121/1123 VUs, 4323 complete and 0 interrupted iterations
+availability   [  17% ] 1012/1014 VUs  0m09.9s/1m0s  500.00 iters/s
+booking        [  17% ] 109/109 VUs    0m09.9s/1m0s  50.00 iters/s
+
+running (0m10.9s), 1173/1175 VUs, 4768 complete and 0 interrupted iterations
+availability   [  18% ] 1059/1059 VUs  0m10.9s/1m0s  500.00 iters/s
+booking        [  18% ] 114/116 VUs    0m10.9s/1m0s  50.00 iters/s
+
+running (0m11.9s), 1222/1227 VUs, 5218 complete and 0 interrupted iterations
+availability   [  20% ] 1102/1103 VUs  0m11.9s/1m0s  500.00 iters/s
+booking        [  20% ] 120/124 VUs    0m11.9s/1m0s  50.00 iters/s
+
+running (0m12.9s), 1263/1268 VUs, 5686 complete and 0 interrupted iterations
+availability   [  22% ] 1139/1140 VUs  0m12.9s/1m0s  500.00 iters/s
+booking        [  22% ] 124/128 VUs    0m12.9s/1m0s  50.00 iters/s
+
+running (0m13.9s), 1326/1329 VUs, 6112 complete and 0 interrupted iterations
+availability   [  23% ] 1193/1194 VUs  0m13.9s/1m0s  500.00 iters/s
+booking        [  23% ] 133/135 VUs    0m13.9s/1m0s  50.00 iters/s
+
+running (0m14.9s), 1383/1386 VUs, 6548 complete and 0 interrupted iterations
+availability   [  25% ] 1244/1246 VUs  0m14.9s/1m0s  500.00 iters/s
+booking        [  25% ] 139/140 VUs    0m14.9s/1m0s  50.00 iters/s
+
+running (0m15.9s), 1441/1442 VUs, 6984 complete and 0 interrupted iterations
+availability   [  27% ] 1296/1296 VUs  0m15.9s/1m0s  500.00 iters/s
+booking        [  27% ] 145/146 VUs    0m15.9s/1m0s  50.00 iters/s
+
+running (0m16.9s), 1499/1501 VUs, 7417 complete and 0 interrupted iterations
+availability   [  28% ] 1349/1350 VUs  0m16.9s/1m0s  500.00 iters/s
+booking        [  28% ] 150/151 VUs    0m16.9s/1m0s  50.00 iters/s
+
+running (0m17.9s), 1553/1556 VUs, 7858 complete and 0 interrupted iterations
+availability   [  30% ] 1398/1399 VUs  0m17.9s/1m0s  500.00 iters/s
+booking        [  30% ] 155/157 VUs    0m17.9s/1m0s  50.00 iters/s
+
+running (0m18.4s), 1618/1621 VUs, 8275 complete and 0 interrupted iterations
+availability   [  32% ] 1456/1458 VUs  0m18.9s/1m0s  500.00 iters/s
+booking        [  32% ] 162/163 VUs    0m18.9s/1m0s  50.00 iters/s
+
+running (0m19.4s), 1677/1681 VUs, 8706 complete and 0 interrupted iterations
+availability   [  33% ] 1510/1513 VUs  0m19.9s/1m0s  500.00 iters/s
+booking        [  33% ] 167/168 VUs    0m19.9s/1m0s  50.00 iters/s
+
+running (0m20.4s), 1739/1743 VUs, 9131 complete and 0 interrupted iterations
+availability   [  35% ] 1566/1569 VUs  0m20.9s/1m0s  500.00 iters/s
+booking        [  35% ] 173/174 VUs    0m20.9s/1m0s  50.00 iters/s
+
+running (0m21.4s), 1800/1802 VUs, 9561 complete and 0 interrupted iterations
+availability   [  37% ] 1622/1624 VUs  0m21.9s/1m0s  500.00 iters/s
+booking        [  37% ] 178/178 VUs    0m21.9s/1m0s  50.00 iters/s
+
+running (0m22.4s), 1860/1864 VUs, 9990 complete and 0 interrupted iterations
+availability   [  38% ] 1676/1678 VUs  0m22.9s/1m0s  500.00 iters/s
+booking        [  38% ] 184/186 VUs    0m22.9s/1m0s  50.00 iters/s
+
+running (0m23.4s), 1924/1927 VUs, 10412 complete and 0 interrupted iterations
+availability   [  40% ] 1735/1736 VUs  0m23.9s/1m0s  500.00 iters/s
+booking        [  40% ] 189/191 VUs    0m23.9s/1m0s  50.00 iters/s
+
+running (0m24.4s), 1978/1982 VUs, 10853 complete and 0 interrupted iterations
+availability   [  42% ] 1784/1786 VUs  0m24.9s/1m0s  500.00 iters/s
+booking        [  42% ] 194/196 VUs    0m24.9s/1m0s  50.00 iters/s
+
+running (0m25.4s), 2042/2043 VUs, 11273 complete and 0 interrupted iterations
+availability   [  43% ] 1843/1843 VUs  0m25.9s/1m0s  500.00 iters/s
+booking        [  43% ] 199/200 VUs    0m25.9s/1m0s  50.00 iters/s
+
+running (0m26.4s), 2110/2113 VUs, 11685 complete and 0 interrupted iterations
+availability   [  45% ] 1904/1905 VUs  0m26.9s/1m0s  500.00 iters/s
+booking        [  45% ] 206/208 VUs    0m26.9s/1m0s  50.00 iters/s
+
+running (0m27.4s), 2181/2181 VUs, 12097 complete and 0 interrupted iterations
+availability   [  47% ] 1966/1966 VUs  0m27.9s/1m0s  500.00 iters/s
+booking        [  47% ] 215/215 VUs    0m27.9s/1m0s  50.00 iters/s
+
+running (0m28.4s), 2242/2243 VUs, 12523 complete and 0 interrupted iterations
+availability   [  48% ] 2021/2022 VUs  0m28.9s/1m0s  500.00 iters/s
+booking        [  48% ] 221/221 VUs    0m28.9s/1m0s  50.00 iters/s
+
+running (0m29.4s), 2302/2304 VUs, 12953 complete and 0 interrupted iterations
+availability   [  50% ] 2076/2076 VUs  0m29.9s/1m0s  500.00 iters/s
+booking        [  50% ] 226/228 VUs    0m29.9s/1m0s  50.00 iters/s
+
+running (0m30.4s), 2375/2377 VUs, 13357 complete and 0 interrupted iterations
+availability   [  52% ] 2140/2142 VUs  0m30.9s/1m0s  500.00 iters/s
+booking        [  52% ] 235/235 VUs    0m30.9s/1m0s  50.00 iters/s
+
+running (0m31.4s), 2427/2431 VUs, 13801 complete and 0 interrupted iterations
+availability   [  53% ] 2183/2187 VUs  0m31.9s/1m0s  500.00 iters/s
+booking        [  53% ] 244/244 VUs    0m31.9s/1m0s  50.00 iters/s
+
+running (0m32.4s), 2495/2499 VUs, 14215 complete and 0 interrupted iterations
+availability   [  55% ] 2245/2247 VUs  0m32.9s/1m0s  500.00 iters/s
+booking        [  55% ] 250/252 VUs    0m32.9s/1m0s  50.00 iters/s
+
+running (0m33.4s), 2555/2558 VUs, 14646 complete and 0 interrupted iterations
+availability   [  57% ] 2296/2297 VUs  0m33.9s/1m0s  500.00 iters/s
+booking        [  57% ] 259/261 VUs    0m33.9s/1m0s  50.00 iters/s
+
+running (0m34.4s), 2615/2618 VUs, 15076 complete and 0 interrupted iterations
+availability   [  58% ] 2347/2349 VUs  0m34.9s/1m0s  500.00 iters/s
+booking        [  58% ] 268/269 VUs    0m34.9s/1m0s  50.00 iters/s
+
+running (0m35.4s), 2682/2686 VUs, 15491 complete and 0 interrupted iterations
+availability   [  60% ] 2406/2408 VUs  0m35.9s/1m0s  500.00 iters/s
+booking        [  60% ] 276/278 VUs    0m35.9s/1m0s  50.00 iters/s
+
+running (0m36.4s), 2750/2752 VUs, 15904 complete and 0 interrupted iterations
+availability   [  62% ] 2465/2465 VUs  0m36.9s/1m0s  500.00 iters/s
+booking        [  62% ] 285/287 VUs    0m36.9s/1m0s  50.00 iters/s
+
+running (0m37.4s), 2809/2813 VUs, 16334 complete and 0 interrupted iterations
+availability   [  63% ] 2519/2521 VUs  0m37.9s/1m0s  500.00 iters/s
+booking        [  63% ] 290/292 VUs    0m37.9s/1m0s  50.00 iters/s
+
+running (0m38.4s), 2870/2874 VUs, 16762 complete and 0 interrupted iterations
+availability   [  65% ] 2570/2571 VUs  0m38.9s/1m0s  500.00 iters/s
+booking        [  65% ] 300/303 VUs    0m38.9s/1m0s  50.00 iters/s
+
+running (0m39.4s), 2929/2932 VUs, 17195 complete and 0 interrupted iterations
+availability   [  67% ] 2620/2622 VUs  0m39.9s/1m0s  500.00 iters/s
+booking        [  67% ] 309/310 VUs    0m39.9s/1m0s  50.00 iters/s
+
+running (0m40.4s), 3008/3011 VUs, 17587 complete and 0 interrupted iterations
+availability   [  68% ] 2690/2691 VUs  0m40.9s/1m0s  500.00 iters/s
+booking        [  68% ] 318/320 VUs    0m40.9s/1m0s  50.00 iters/s
+
+running (0m41.4s), 3082/3086 VUs, 17988 complete and 0 interrupted iterations
+availability   [  70% ] 2754/2756 VUs  0m41.9s/1m0s  500.00 iters/s
+booking        [  70% ] 328/330 VUs    0m41.9s/1m0s  50.00 iters/s
+
+running (0m42.4s), 3157/3162 VUs, 18386 complete and 0 interrupted iterations
+availability   [  72% ] 2822/2825 VUs  0m42.9s/1m0s  500.00 iters/s
+booking        [  72% ] 335/337 VUs    0m42.9s/1m0s  50.00 iters/s
+
+running (0m43.4s), 3231/3235 VUs, 18790 complete and 0 interrupted iterations
+availability   [  73% ] 2886/2888 VUs  0m43.9s/1m0s  500.00 iters/s
+booking        [  73% ] 345/347 VUs    0m43.9s/1m0s  50.00 iters/s
+
+running (0m44.4s), 3310/3312 VUs, 19184 complete and 0 interrupted iterations
+availability   [  75% ] 2955/2955 VUs  0m44.9s/1m0s  500.00 iters/s
+booking        [  75% ] 355/357 VUs    0m44.9s/1m0s  50.00 iters/s
+
+running (0m45.4s), 3412/3416 VUs, 19528 complete and 0 interrupted iterations
+availability   [  77% ] 3047/3049 VUs  0m45.9s/1m0s  500.00 iters/s
+booking        [  77% ] 365/367 VUs    0m45.9s/1m0s  50.00 iters/s
+
+running (0m46.4s), 3569/3571 VUs, 19766 complete and 0 interrupted iterations
+availability   [  78% ] 3186/3188 VUs  0m46.9s/1m0s  500.00 iters/s
+booking        [  78% ] 383/383 VUs    0m46.9s/1m0s  50.00 iters/s
+
+running (0m47.4s), 3697/3700 VUs, 20059 complete and 0 interrupted iterations
+availability   [  80% ] 3303/3304 VUs  0m47.9s/1m0s  500.00 iters/s
+booking        [  80% ] 394/396 VUs    0m47.9s/1m0s  50.00 iters/s
+
+running (0m48.4s), 3793/3797 VUs, 20416 complete and 0 interrupted iterations
+availability   [  82% ] 3389/3391 VUs  0m48.9s/1m0s  500.00 iters/s
+booking        [  82% ] 404/406 VUs    0m48.9s/1m0s  50.00 iters/s
+
+running (0m49.4s), 3889/3890 VUs, 20774 complete and 0 interrupted iterations
+availability   [  83% ] 3474/3475 VUs  0m49.9s/1m0s  500.00 iters/s
+booking        [  83% ] 415/415 VUs    0m49.9s/1m0s  50.00 iters/s
+
+running (0m49.8s), 3980/3984 VUs, 21139 complete and 0 interrupted iterations
+availability   [  85% ] 3557/3559 VUs  0m50.9s/1m0s  500.00 iters/s
+booking        [  85% ] 423/425 VUs    0m50.9s/1m0s  50.00 iters/s
+
+running (0m50.8s), 4066/4069 VUs, 21518 complete and 0 interrupted iterations
+availability   [  87% ] 3639/3639 VUs  0m51.9s/1m0s  500.00 iters/s
+booking        [  87% ] 427/430 VUs    0m51.9s/1m0s  50.00 iters/s
+
+running (0m51.8s), 4150/4150 VUs, 21903 complete and 0 interrupted iterations
+availability   [  88% ] 3711/3711 VUs  0m52.9s/1m0s  500.00 iters/s
+booking        [  88% ] 439/439 VUs    0m52.9s/1m0s  50.00 iters/s
+
+running (0m52.8s), 4239/4240 VUs, 22274 complete and 0 interrupted iterations
+availability   [  90% ] 3795/3796 VUs  0m53.9s/1m0s  500.00 iters/s
+booking        [  90% ] 444/444 VUs    0m53.9s/1m0s  50.00 iters/s
+
+running (0m53.8s), 4376/4378 VUs, 22549 complete and 0 interrupted iterations
+availability   [  92% ] 3925/3925 VUs  0m54.9s/1m0s  500.00 iters/s
+booking        [  92% ] 451/453 VUs    0m54.9s/1m0s  50.00 iters/s
+
+running (0m54.8s), 4459/4460 VUs, 22933 complete and 0 interrupted iterations
+availability   [  93% ] 3995/3995 VUs  0m55.9s/1m0s  500.00 iters/s
+booking        [  93% ] 464/465 VUs    0m55.9s/1m0s  50.00 iters/s
+
+running (0m55.8s), 4556/4561 VUs, 23286 complete and 0 interrupted iterations
+availability   [  95% ] 4081/4084 VUs  0m56.9s/1m0s  500.00 iters/s
+booking        [  95% ] 475/477 VUs    0m56.9s/1m0s  50.00 iters/s
+
+running (0m56.8s), 4643/4645 VUs, 23664 complete and 0 interrupted iterations
+availability   [  97% ] 4160/4160 VUs  0m57.9s/1m0s  500.00 iters/s
+booking        [  97% ] 483/485 VUs    0m57.9s/1m0s  50.00 iters/s
+
+running (0m57.8s), 4730/4732 VUs, 24040 complete and 0 interrupted iterations
+availability   [  98% ] 4240/4240 VUs  0m58.9s/1m0s  500.00 iters/s
+booking        [  98% ] 490/492 VUs    0m58.9s/1m0s  50.00 iters/s
+
+running (0m58.8s), 4833/4834 VUs, 24384 complete and 0 interrupted iterations
+availability   [ 100% ] 4333/4334 VUs  0m59.9s/1m0s  500.00 iters/s
+booking        [ 100% ] 500/500 VUs    0m59.9s/1m0s  50.00 iters/s
+
+running (0m59.8s), 4504/4837 VUs, 24742 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m00.8s), 4232/4837 VUs, 25014 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m01.8s), 3872/4837 VUs, 25374 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m02.8s), 3512/4837 VUs, 25734 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m03.8s), 3154/4837 VUs, 26092 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m04.8s), 2791/4837 VUs, 26455 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m05.8s), 2372/4837 VUs, 26874 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m06.8s), 2264/4837 VUs, 26982 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m07.8s), 2229/4837 VUs, 27017 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m08.8s), 2188/4837 VUs, 27058 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m09.8s), 2125/4837 VUs, 27121 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m10.8s), 2076/4837 VUs, 27170 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m11.8s), 1768/4837 VUs, 27478 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m12.8s), 1479/4837 VUs, 27767 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m13.8s), 1259/4837 VUs, 27987 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m14.8s), 1163/4837 VUs, 28083 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m15.8s), 1051/4837 VUs, 28195 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m16.8s), 0942/4837 VUs, 28304 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m17.8s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m18.8s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m19.8s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m20.8s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m21.8s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m22.3s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m23.3s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m24.3s), 0939/4837 VUs, 28307 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m25.3s), 0815/4837 VUs, 28431 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m26.3s), 0748/4837 VUs, 28498 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m27.3s), 0521/4837 VUs, 28725 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+running (1m28.3s), 0382/4837 VUs, 28864 complete and 0 interrupted iterations
+availability ↓ [ 100% ] 4336/4337 VUs  1m0s  500.00 iters/s
+booking      ↓ [ 100% ] 500/500 VUs    1m0s  50.00 iters/s
+
+     ✗ availability 200
+      ↳  98% — ✓ 25870 / ✗ 456
+     ✗ booking 201 or 409
+      ↳  97% — ✓ 2508 / ✗ 56
+     ✗ cancel 204
+      ↳  99% — ✓ 339 / ✗ 3
+
+   ✗ checks.........................: 98.23% 28717 out of 29232
+     data_received..................: 80 MB  903 kB/s
+     data_sent......................: 4.7 MB 53 kB/s
+     dropped_iterations.............: 3756   42.526504/s
+     http_req_blocked...............: avg=809.36ms med=164.2µs  p(90)=2.05s    p(95)=5.1s     p(99)=18.87s   max=19.54s
+     http_req_connecting............: avg=809.31ms med=113.57µs p(90)=2.05s    p(95)=5.1s     p(99)=18.87s   max=19.54s
+     http_req_duration..............: avg=4.81s    med=4.77s    p(90)=6.27s    p(95)=11.16s   p(99)=24.48s   max=57.85s
+       { expected_response:true }...: avg=4.89s    med=4.77s    p(90)=6.28s    p(95)=11.22s   p(99)=24.49s   max=53.77s
+     ✗ { scenario:availability }....: avg=4.78s    med=4.76s    p(90)=6.26s    p(95)=11.13s   p(99)=23.88s   max=57.85s
+     ✗ { scenario:booking }.........: avg=5.12s    med=4.78s    p(90)=6.48s    p(95)=11.87s   p(99)=28.21s   max=56.83s
+     http_req_failed................: 1.79%  526 out of 29232
+     http_req_receiving.............: avg=99.74µs  med=74.8µs   p(90)=127.88µs p(95)=149.96µs p(99)=199.75µs max=5.38ms
+     http_req_sending...............: avg=32.87µs  med=27.98µs  p(90)=56.14µs  p(95)=68.77µs  p(99)=98.05µs  max=1.57ms
+     http_req_tls_handshaking.......: avg=0s       med=0s       p(90)=0s       p(95)=0s       p(99)=0s       max=0s    
+     http_req_waiting...............: avg=4.81s    med=4.77s    p(90)=6.27s    p(95)=11.16s   p(99)=24.48s   max=57.85s
+     http_reqs......................: 29232  330.973048/s
+     iteration_duration.............: avg=6.3s     med=4.78s    p(90)=10.88s   p(95)=23.61s   p(99)=41.29s   max=1m0s  
+     iterations.....................: 28864  326.806446/s
+     vus............................: 382    min=131            max=4833
+     vus_max........................: 4837   min=1100           max=4837
+
+
+running (1m28.3s), 0000/4837 VUs, 28864 complete and 382 interrupted iterations
+availability ✓ [ 100% ] 0324/4337 VUs  1m0s  500.00 iters/s
+booking      ✓ [ 100% ] 058/500 VUs    1m0s  50.00 iters/s

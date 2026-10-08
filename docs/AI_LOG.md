@@ -177,3 +177,28 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 - The collector at first showed no span names, because compose had not recreated it after its mounted config changed. `docker compose restart` fixed it. Worth knowing for the demo.
 - WhiteNoise warned in every test about the missing `STATIC_ROOT`. It is now container-only, not silenced.
 - The gunicorn hook's `type: ignore` used the wrong error code. mypy pointed to the exact one needed.
+
+## Milestone 9 — Concurrency, constraints and load (2026-10-08)
+
+**Intent.** Concurrency and constraint tests, then load tests against the §2.1 targets. Find the bottleneck *before* tuning anything.
+
+**Produced.**
+- `tests/concurrency/` (helpers, 6 tests): 20-thread races for the last bay/technician and a hot slot, a concurrent duplicate idempotency key, concurrent cancels, a cancel/rebook race, and a test that **drops the exclusion constraints** to show the app alone double-books.
+- Load seed commands (`seed_load*`) and the `docker-compose.load.yml` overlay.
+- `tests/load/k6.js` (open-model scenarios), `locustfile.py`, and `hot_slot.py` (computes the expected capacity from the DB, then fires 50 simultaneous requests).
+- `make load / load-stress / hot-slot / locust`.
+
+**Verified.**
+- Concurrency suite green. Without constraints, **19 of 20** requests confirmed the same single bay/technician; with them, exactly 1.
+- Load results are in the README (`docs/load/` holds raw k6 output and resource samples).
+
+**Corrected (two good stories).**
+1. *500s on the first load run.* The correlation id in the problem response led straight to the JSON log line: `ValueError: Invalid VIN 'LOAD…'`. The AI had generated seed VINs containing **O** (forbidden). `bulk_create` skips model validators, but the domain `Vin` value object rejected the data at runtime. The fix was in the seed, not the domain.
+2. *"Availability misses its SLO" turned out to be a measurement artifact.* Locust reported p95 ≈ 220 ms (target 150 ms). Instead of adding workers, the AI investigated:
+   - django-prometheus said the full request took **6.7 ms** server-side, and the use case 4.8 ms.
+   - CPU was mostly idle everywhere.
+   - A plain-Python client reproducing Locust's exact shape (110 closed-loop users) measured **p95 12 ms**.
+   - The following changed nothing: `HttpUser` vs `FastHttpUser`, `Connection: close`, `127.0.0.1`, 8 Locust processes, running Locust *inside* the compose network, and moving gunicorn's heartbeat off overlayfs.
+   - k6 on the compose network measured p95 ≈ 9 ms.
+
+   Conclusion: Locust on this WSL2 host adds ~120 ms client-side. Recorded numbers use k6, cross-checked with server metrics (I48). Several plausible "fixes" (more workers, caching tweaks) would have been tuned against a phantom.

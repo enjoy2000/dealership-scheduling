@@ -1,0 +1,10 @@
+slot 2027-01-11T08:45:00Z at dealership 1001, 50 simultaneous requests
+capacity before the burst (free bays vs free qualified technicians): 6
+status counts: {201: 6, 409: 44}
+overlapping confirmed pairs in the whole database: 0
+PASS
+slot 2027-01-12T08:45:00Z at dealership 1002, 50 simultaneous requests
+capacity before the burst (free bays vs free qualified technicians): 5
+status counts: {201: 5, 409: 45}
+overlapping confirmed pairs in the whole database: 0
+PASS

@@ -36,7 +36,7 @@ services:
       # Local-only placeholder; set a real SECRET_KEY in .env for anything shared.
       SECRET_KEY: ${SECRET_KEY:-local-compose-only-not-a-secret}
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-4}
-      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus
+      PROMETHEUS_MULTIPROC_DIR: /dev/shm/prometheus
       THROTTLE_BOOKING_RATE: ${THROTTLE_BOOKING_RATE:-60/min}
       THROTTLE_AVAILABILITY_RATE: ${THROTTLE_AVAILABILITY_RATE:-120/min}
       AVAILABILITY_CACHE_TTL_SECONDS: ${AVAILABILITY_CACHE_TTL_SECONDS:-5}

@@ -9,6 +9,9 @@ threads = 1  # sync workers: one request per process, DB connection reused per w
 timeout = 30
 graceful_timeout = 30  # finish in-flight requests on SIGTERM
 keepalive = 5
+# Worker heartbeat files must live on tmpfs: on Docker's overlay filesystem the per-loop
+# heartbeat write can stall workers (gunicorn docs, "Blocking OS calls").
+worker_tmp_dir = "/dev/shm"
 accesslog = None  # request metrics/logs come from django-prometheus and structlog
 errorlog = "-"
 
