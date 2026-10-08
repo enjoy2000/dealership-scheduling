@@ -1,0 +1,62 @@
+[importlinter]
+root_packages =
+    contexts
+    shared_kernel
+include_external_packages = True
+
+[importlinter:contract:scheduling-layers]
+name = Scheduling layers point inward (interface/infrastructure -> application -> domain)
+type = layers
+containers =
+    contexts.scheduling
+layers =
+    (container)
+    interface | infrastructure
+    application
+    domain
+
+[importlinter:contract:domain-is-pure]
+name = Scheduling domain imports no framework, outer layer or other context
+type = forbidden
+source_modules =
+    contexts.scheduling.domain
+forbidden_modules =
+    django
+    rest_framework
+    contexts.scheduling.application
+    contexts.scheduling.infrastructure
+    contexts.scheduling.interface
+    contexts.catalog
+
+[importlinter:contract:application-is-framework-free]
+name = Scheduling application imports no framework, infrastructure or interface
+type = forbidden
+source_modules =
+    contexts.scheduling.application
+forbidden_modules =
+    django
+    rest_framework
+    contexts.scheduling.infrastructure
+    contexts.scheduling.interface
+    contexts.catalog
+
+[importlinter:contract:catalog-only-via-gateway]
+name = Scheduling reaches Catalog only through the catalog gateway
+type = forbidden
+source_modules =
+    contexts.scheduling
+forbidden_modules =
+    contexts.catalog
+ignore_imports =
+    contexts.scheduling.infrastructure.catalog_gateway -> contexts.catalog.**
+unmatched_ignore_imports_alerting = none
+
+[importlinter:contract:shared-kernel-is-pure]
+name = Shared kernel imports no framework and no bounded context
+type = forbidden
+source_modules =
+    shared_kernel
+forbidden_modules =
+    django
+    rest_framework
+    contexts

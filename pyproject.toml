@@ -1,0 +1,77 @@
+[project]
+name = "unified-service-scheduler"
+version = "0.1.0"
+description = "Unified Service Scheduler: books a service bay and a qualified technician for a dealership appointment."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "django>=5.2,<6",
+    "djangorestframework>=3.15",
+    "psycopg[binary]>=3.2",
+    "dj-database-url>=2.2",
+    "drf-spectacular>=0.28",
+    "structlog>=24.4",
+    "django-prometheus>=2.3",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-exporter-otlp>=1.27",
+    "opentelemetry-instrumentation-django>=0.48b0",
+    "opentelemetry-instrumentation-psycopg>=0.48b0",
+    "redis>=5.0",
+    "gunicorn>=23.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "pytest-cov>=5.0",
+    "factory-boy>=3.3",
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "django-stubs[compatible-mypy]>=5.1",
+    "djangorestframework-stubs[compatible-mypy]>=3.15",
+    "import-linter>=2.1",
+    "locust>=2.32",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["**/migrations/**", "*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "DJ", "RUF", "N", "PT"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+exclude = ["/migrations/", "^tests/load/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = ["dj_database_url.*", "django_prometheus.*", "factory.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+testpaths = ["tests"]
+norecursedirs = ["tests/load"]
+addopts = "-ra --strict-markers"
+markers = [
+    "architecture: import-linter layer contracts",
+]
+
+[tool.coverage.run]
+source = ["contexts", "shared_kernel"]
+omit = ["*/migrations/*"]

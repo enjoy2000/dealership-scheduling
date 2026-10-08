@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.23"
+      - run: uv sync --frozen
+      - name: Start backing services (docker compose)
+        run: docker compose up -d --wait db redis
+      - name: Ruff
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Mypy
+        run: uv run mypy .
+      - name: Architecture contracts
+        run: uv run lint-imports
+      - name: Tests
+        run: uv run pytest --cov --cov-report=term-missing
+        env:
+          DATABASE_URL: postgres://scheduler:scheduler@localhost:5432/scheduler
