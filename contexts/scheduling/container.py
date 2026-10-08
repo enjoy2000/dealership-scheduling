@@ -6,21 +6,29 @@ Views obtain handlers from `get_container()`. Tests may install their own instan
 
 import time
 from collections.abc import Callable
+from datetime import timedelta
 from functools import cached_property
 
 from django.conf import settings
 
 from contexts.scheduling.application.commands.book_appointment import BookAppointmentHandler
 from contexts.scheduling.application.commands.cancel_appointment import CancelAppointmentHandler
+from contexts.scheduling.application.decorators import Idempotent
+from contexts.scheduling.application.dto import AppointmentDetails, BookAppointmentCommand
 from contexts.scheduling.application.event_handlers import InvalidateAvailability
 from contexts.scheduling.application.ports import Clock
 from contexts.scheduling.application.queries.get_appointment import GetAppointmentHandler
 from contexts.scheduling.application.queries.list_availability import ListAvailabilityHandler
+from contexts.scheduling.application.serialization import (
+    appointment_details_from_json,
+    appointment_details_to_json,
+)
 from contexts.scheduling.domain.events import AppointmentCancelled, AppointmentConfirmed
 from contexts.scheduling.infrastructure.cache import DjangoAvailabilityCache
 from contexts.scheduling.infrastructure.catalog_gateway import DjangoCatalogGateway
 from contexts.scheduling.infrastructure.clock import SystemClock
 from contexts.scheduling.infrastructure.event_publisher import InProcessEventPublisher
+from contexts.scheduling.infrastructure.idempotency import DjangoIdempotencyStore
 from contexts.scheduling.infrastructure.persistence.read_models import (
     DjangoAppointmentReadModel,
     DjangoAvailabilityReadModel,
@@ -43,14 +51,24 @@ class Container:
         self.events.subscribe(AppointmentCancelled, invalidate)
 
     @cached_property
-    def book_appointment(self) -> BookAppointmentHandler:
-        return BookAppointmentHandler(
+    def book_appointment(self) -> Idempotent[BookAppointmentCommand, AppointmentDetails]:
+        handler = BookAppointmentHandler(
             uow=self.uow,
             catalog=self.catalog,
             clock=self.clock,
             events=self.events,
             max_retries=settings.BOOKING_MAX_RETRIES,
             sleep=self.sleep,
+        )
+        return Idempotent(
+            handler,
+            store=DjangoIdempotencyStore(
+                clock=self.clock, ttl=timedelta(hours=settings.IDEMPOTENCY_TTL_HOURS)
+            ),
+            transaction=self.uow,
+            encode=appointment_details_to_json,
+            decode=appointment_details_from_json,
+            status=201,
         )
 
     @cached_property

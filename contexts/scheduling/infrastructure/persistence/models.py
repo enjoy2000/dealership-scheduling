@@ -129,3 +129,20 @@ class AppointmentRecord(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id} ({self.status})"
+
+
+class IdempotencyRecord(models.Model):
+    """SPEC §14.5. Written in the same transaction as the appointment it records."""
+
+    key = models.CharField(max_length=255, unique=True)
+    request_hash = models.CharField(max_length=64)
+    response_status = models.PositiveSmallIntegerField(null=True)
+    response_body = models.JSONField(null=True)
+    created_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        db_table = "scheduling_idempotency_record"
+        verbose_name = "idempotency record"
+
+    def __str__(self) -> str:
+        return self.key

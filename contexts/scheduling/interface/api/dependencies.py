@@ -9,6 +9,7 @@ from typing import Protocol
 
 from django.core.exceptions import ImproperlyConfigured
 
+from contexts.scheduling.application.decorators import Replayable
 from contexts.scheduling.application.dto import (
     AppointmentDetails,
     Availability,
@@ -21,7 +22,11 @@ from contexts.scheduling.application.dto import (
 
 class SchedulingUseCases(Protocol):
     @property
-    def book_appointment(self) -> Callable[[BookAppointmentCommand], AppointmentDetails]: ...
+    def book_appointment(
+        self,
+    ) -> Callable[[str, BookAppointmentCommand], Replayable[AppointmentDetails]]:
+        """Called with the Idempotency-Key and the command."""
+        ...
 
     @property
     def cancel_appointment(self) -> Callable[[CancelAppointmentCommand], None]: ...

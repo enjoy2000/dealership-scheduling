@@ -175,7 +175,7 @@ def test_correlation_id_from_request_is_echoed(api):
 
 
 def test_unexpected_error_returns_500_problem(api, container, monkeypatch):
-    def explode(command):
+    def explode(key, command):
         raise RuntimeError("database on fire")
 
     monkeypatch.setattr(container, "book_appointment", explode)

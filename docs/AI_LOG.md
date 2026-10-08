@@ -131,3 +131,24 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 **Corrected.**
 - The invalidation API test failed at first. pytest-django wraps tests in a transaction, so `transaction.on_commit` (the after-commit dispatch from I32) never fired. This was not a production bug: requests run in autocommit, so the unit of work's atomic block is outermost and commits. The test now runs with `transaction=True`, so it proves the real commit path instead of faking it.
 - `assert` used for a runtime invariant in the query handler (assertions vanish under `-O`) was replaced with an explicit `LookupError`.
+
+## Milestone 7 — Idempotency (2026-10-08)
+
+**Intent.** `Idempotency-Key` storage and replay (§14.5): same key and payload → original `201`; different payload → `409`; written in the booking's transaction; failures not stored; 24 h expiry.
+
+**Produced.**
+- Application: `decorators.py` (`Idempotent`, `Replayable`, `fingerprint`), `serialization.py`, ports `Transaction`/`IdempotencyStore`/`StoredResponse`.
+- Infrastructure: `idempotency.py` (insert-first reservation, `23505` → conflict), `IdempotencyRecord` and migration 0002, `purge_idempotency_keys`, and the unit of work rebuilt as a nestable stack.
+- The view sets `Idempotent-Replayed: true`.
+
+**Verified.**
+- 9 application tests with fakes: replay, offset-equivalent payload, different payload, failure not stored then retried, key taken concurrently, codec round-trip.
+- 4 store tests on Postgres.
+- 4 API tests (rule 8, conflict, retry after failure, key row stored with the appointment).
+- Live in compose: `201` → replay `201` with the header (same id) → `409 idempotency_conflict`.
+- 243 tests passing. All checks green.
+- The genuine *concurrent* duplicate case (two threads, real connections) is covered in M9.
+
+**Corrected.**
+- The first purge-command test reused the frozen test clock, but the command uses wall-clock time. It was rewritten to use real timestamps rather than injecting a clock into an ops command.
+- mypy flagged `encode=dict` in the test as not matching `Callable[[R], dict]`. It now uses an explicit, typed identity.

@@ -74,6 +74,13 @@ class AppointmentCollectionView(APIView):
                 response=[201],
                 description="URL of the new appointment.",
             ),
+            OpenApiParameter(
+                "Idempotent-Replayed",
+                OpenApiTypes.STR,
+                OpenApiParameter.HEADER,
+                response=[201],
+                description="`true` when this is a replay of an earlier identical request.",
+            ),
         ],
         responses={
             201: OpenApiResponse(AppointmentSerializer, description="Appointment confirmed."),
@@ -86,15 +93,17 @@ class AppointmentCollectionView(APIView):
         tags=["appointments"],
     )
     def post(self, request: Request) -> Response:
-        idempotency_key(request)
+        key = idempotency_key(request)
         serializer = BookAppointmentRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        details = use_cases().book_appointment(BookAppointmentCommand(**serializer.validated_data))
-        location = reverse("appointment-detail", args=[details.id], request=request)
+        command = BookAppointmentCommand(**serializer.validated_data)
+        result = use_cases().book_appointment(key, command)
+        details = result.value
+        headers = {"Location": reverse("appointment-detail", args=[details.id], request=request)}
+        if result.replayed:
+            headers["Idempotent-Replayed"] = "true"
         return Response(
-            AppointmentSerializer(details).data,
-            status=status.HTTP_201_CREATED,
-            headers={"Location": location},
+            AppointmentSerializer(details).data, status=status.HTTP_201_CREATED, headers=headers
         )
 
 

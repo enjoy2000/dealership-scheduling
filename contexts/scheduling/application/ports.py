@@ -2,9 +2,10 @@
 
 import uuid
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date
 from types import TracebackType
-from typing import Protocol, Self
+from typing import Any, Protocol, Self
 
 from contexts.scheduling.application.dto import AppointmentRow, Availability
 from contexts.scheduling.domain.model.references import (
@@ -33,18 +34,16 @@ __all__ = [
     "CatalogGateway",
     "Clock",
     "EventPublisher",
+    "IdempotencyStore",
+    "StoredResponse",
+    "Transaction",
     "UnitOfWork",
 ]
 
 
-class UnitOfWork(Protocol):
-    """One database transaction. Leaving the block without `commit()` rolls back."""
-
-    @property
-    def appointments(self) -> AppointmentRepository: ...
-
-    @property
-    def resources(self) -> ResourceRepository: ...
+class Transaction(Protocol):
+    """A database transaction. Leaving the block without `commit()` rolls back.
+    Nested use becomes a savepoint."""
 
     def __enter__(self) -> Self: ...
 
@@ -58,6 +57,16 @@ class UnitOfWork(Protocol):
     def commit(self) -> None: ...
 
     def rollback(self) -> None: ...
+
+
+class UnitOfWork(Transaction, Protocol):
+    """A transaction that also exposes the Scheduling repositories."""
+
+    @property
+    def appointments(self) -> AppointmentRepository: ...
+
+    @property
+    def resources(self) -> ResourceRepository: ...
 
 
 class CatalogGateway(Protocol):
@@ -102,3 +111,25 @@ class AvailabilityCache(Protocol):
     def set(self, value: Availability) -> None: ...
 
     def invalidate(self, dealership_id: int, day: date) -> None: ...
+
+
+@dataclass(frozen=True)
+class StoredResponse:
+    request_hash: str
+    status: int | None
+    body: dict[str, Any] | None
+
+
+class IdempotencyStore(Protocol):
+    """Idempotency keys (SPEC §14.5). `reserve` and `complete` must run inside the same
+    transaction as the use case, so a concurrent duplicate loses on the unique key."""
+
+    def find(self, key: str) -> StoredResponse | None:
+        """A completed, unexpired response for `key`, if any."""
+        ...
+
+    def reserve(self, key: str, request_hash: str) -> None:
+        """Claim `key`. Raises `IdempotencyConflictError` if it is already taken."""
+        ...
+
+    def complete(self, key: str, status: int, body: dict[str, Any]) -> None: ...
