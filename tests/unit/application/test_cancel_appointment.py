@@ -28,13 +28,11 @@ def book_uptown(world: World, vehicle: int = 1, customer: int = 1) -> uuid.UUID:
 def test_cancel_marks_appointment_cancelled_and_publishes_event(world: World):
     appointment_id = book_uptown(world)
 
-    result = world.cancel(CancelAppointmentCommand(appointment_id))
+    world.cancel(CancelAppointmentCommand(appointment_id))
 
-    assert result.id == appointment_id
-    assert result.status == "CANCELLED"
-    assert result.cancelled_at == world.clock.now()
     stored = world.store.appointments[AppointmentId(appointment_id)]
     assert stored.status is AppointmentStatus.CANCELLED
+    assert stored.cancelled_at == world.clock.now()
     [event] = world.publisher.published
     assert isinstance(event, AppointmentCancelled)
     assert not world.publisher.published_inside_transaction
@@ -52,13 +50,18 @@ def test_cancelling_frees_bay_and_technician(world: World):
 
 def test_cancel_is_idempotent(world: World):
     appointment_id = book_uptown(world)
-    first = world.cancel(CancelAppointmentCommand(appointment_id))
+    world.cancel(CancelAppointmentCommand(appointment_id))
+    first_cancelled_at = world.clock.now()
     world.publisher.published.clear()
+    commits = world.uow.commits
     world.clock.current = utc(2026, 11, 1, 13)
 
-    second = world.cancel(CancelAppointmentCommand(appointment_id))
+    world.cancel(CancelAppointmentCommand(appointment_id))
 
-    assert second == first
+    stored = world.store.appointments[AppointmentId(appointment_id)]
+    assert stored.status is AppointmentStatus.CANCELLED
+    assert stored.cancelled_at == first_cancelled_at
+    assert world.uow.commits == commits
     assert world.publisher.published == []
 
 

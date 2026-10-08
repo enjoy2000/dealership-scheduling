@@ -1,6 +1,6 @@
 # Spec: Unified Service Scheduler (Scenario A) — Django Backend
 
-**Version 1.0 — FINAL, ready for implementation.**
+**Version 1.1 — FINAL, ready for implementation.** (1.1: RESTful responses — `DELETE` returns `204`, `POST` returns `Location`; see `docs/DECISIONS.md` I18.)
 
 > Single source of truth for implementation (feed to oh-my-claudecode / Claude Code) and the basis for the System Design Document.
 > Layer chosen: **Backend** (RESTful API + persistent DB). Client is stubbed via OpenAPI spec + curl examples.
@@ -307,12 +307,12 @@ class Meta:
 |---|---|---|
 | POST | `/api/v1/appointments/` | Book. Header `Idempotency-Key`. Body: `customer_id, vehicle_id, service_type_id, dealership_id, start_time` |
 | GET | `/api/v1/appointments/{id}/` | Fetch appointment |
-| DELETE | `/api/v1/appointments/{id}/` | Cancel (status → CANCELLED, frees resources) |
+| DELETE | `/api/v1/appointments/{id}/` | Cancel (status → CANCELLED, frees resources). `204 No Content`, empty body |
 | GET | `/api/v1/availability/?dealership_id&service_type_id&date` | List bookable start times |
 | GET | `/api/v1/schema/`, `/api/v1/docs/` | OpenAPI schema / Swagger UI |
 | GET | `/healthz`, `/readyz`, `/metrics` | Ops endpoints |
 
-**Responses:** `201` created · `200` ok · `400/422` validation (bad slot, past time, outside hours) · `404` unknown reference · `409` no bay/technician available, vehicle already booked, or idempotency key reused with a different payload · `500` problem JSON with correlation id.
+**Responses:** `201` created (with `Location` header of the new appointment) · `200` ok · `204` no content (cancel) · `400/422` validation (bad slot, past time, outside hours) · `404` unknown reference · `409` no bay/technician available, vehicle already booked, or idempotency key reused with a different payload · `500` problem JSON with correlation id.
 
 201 body: `{ id, status, start_time, end_time, customer, vehicle, service_type, dealership, technician, service_bay }`.
 
@@ -329,7 +329,7 @@ class Meta:
 9. Vehicle must belong to the customer; unknown IDs → `404`.
 10. Bookings outside opening hours or in the past → `422`.
 11. `POST` without an `Idempotency-Key` header → `400`.
-12. Cancelling is idempotent (repeat `DELETE` → `200`, state unchanged); cancelling at or after the start time → `422`.
+12. Cancelling returns `204 No Content` with an empty body and is idempotent (repeat `DELETE` → `204`, state unchanged); cancelling at or after the start time → `422`.
 13. `GET /availability` returns only start times for which a booking would currently succeed (before caching).
 
 ## 8. Testing strategy

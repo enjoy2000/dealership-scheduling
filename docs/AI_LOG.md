@@ -46,3 +46,13 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 - mypy rejected the fakes against the `UnitOfWork` port because the Protocol declared `appointments`/`resources` as mutable attributes (invariant). They became read-only properties, which is also the correct contract: callers must not swap repositories.
 - Ruff flagged `NotFound` (N818). Unlike the domain errors, this name isn't fixed by the spec, so it was renamed to `NotFoundError` instead of widening the ignore.
 - Removed `type: ignore` comments and in-function imports from the first test draft.
+
+### Milestone 3 follow-up — RESTful cancel (2026-10-08)
+
+**Intent (user).** "API design should follow RESTful, DELETE returns empty no-content 204."
+
+**Produced.** `CancelAppointmentHandler` now returns `None` and `CancellationResult` is removed. SPEC.md is updated to v1.1 (§6 responses, §7 rule 12), adding a `Location` header on `201`. Recorded as I18.
+
+**Verified.** The cancel tests were rewritten first to assert persisted state instead of a returned DTO. The idempotency test now also checks that the repeated cancel doesn't commit. Full gate is green: 111 tests.
+
+**Corrected.** Milestone 3 had followed SPEC v1.0, which returned `200` on a repeated cancel. The user overrode this as non-RESTful.

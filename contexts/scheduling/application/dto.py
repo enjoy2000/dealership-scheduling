@@ -52,10 +52,3 @@ class AppointmentDetails:
     dealership: NamedRef
     technician: NamedRef
     service_bay: NamedRef
-
-
-@dataclass(frozen=True)
-class CancellationResult:
-    id: uuid.UUID
-    status: str
-    cancelled_at: datetime
