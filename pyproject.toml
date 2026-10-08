@@ -18,6 +18,7 @@ dependencies = [
     "opentelemetry-instrumentation-psycopg>=0.48b0",
     "redis>=5.0",
     "gunicorn>=23.0",
+    "django-stubs-ext>=5.1",
 ]
 
 [dependency-groups]

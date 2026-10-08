@@ -56,3 +56,28 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 **Verified.** The cancel tests were rewritten first to assert persisted state instead of a returned DTO. The idempotency test now also checks that the repeated cancel doesn't commit. Full gate is green: 111 tests.
 
 **Corrected.** Milestone 3 had followed SPEC v1.0, which returned `200` on a repeated cancel. The user overrode this as non-RESTful.
+
+## Milestone 4 — Infrastructure (2026-10-08)
+
+**Intent.** ORM models and migrations (`BtreeGistExtension` + 3 exclusion constraints), mappers, repositories, `DjangoUnitOfWork`, `23P01` translation, `CatalogGateway` adapter, Catalog app and seed command.
+
+**Produced.**
+- Catalog app: models, admin, `seed_catalog`, `seed_demo`.
+- Scheduling persistence app: `models.py`, migration `0001` starting with `BtreeGistExtension()`, `ranges.py`, `mappers.py`, `error_translation.py`, `repositories.py`, `unit_of_work.py`, read-only appointment admin, `seed_resources`.
+- `infrastructure/catalog_gateway.py`.
+
+**Verified.**
+- 39 integration tests on PostgreSQL 16 (compose):
+  - extension and constraint presence, `makemigrations --check`
+  - raw-ORM overlap inserts rejected for bay/technician/vehicle, while back-to-back and cancelled rows are allowed
+  - `23P01` → `ResourceConflict`, while a duplicate primary key is *not* translated, and the connection stays usable after a conflict
+  - repository round-trips, availability, and technician load counting (cancelled and other-day appointments excluded)
+  - UoW commit/rollback/exception/reuse, gateway mapping, seed idempotency and sequence reset
+  - book → conflict → cancel → rebook through the real handlers
+- Full suite: 150 passed, 98% coverage. `ruff`, `mypy --strict`, and `lint-imports` (5 kept; the gateway exception is now matched, and the I2 relaxation is removed) are all clean.
+- In compose: `make migrate` and `make seed` (run twice) succeed, and `pg_constraint` lists the three exclusion constraints.
+
+**Corrected.**
+- Django admin generics (`ModelAdmin[Model]`) crashed at runtime without `django_stubs_ext.monkeypatch()`. Fixed by adding the dependency (I25).
+- Ruff RUF012 flagged list-valued `Meta.constraints`/`inlines`. The AI's first automated fix, a regex rewrite to tuples, dropped the trailing comma on single-element lists, so `constraints = (X)` became a bare object. Ruff stayed green; the **mypy Django plugin crashed** on it (`'CheckConstraint' object is not iterable`). The five spots were fixed by hand, and `makemigrations --check` confirmed no schema drift. Lesson: blind mechanical rewrites need a semantic check, and the typed toolchain provided one.
+- The first seeding design had a shared helper module in Catalog that Scheduling would have imported. It was replaced by per-context commands composed via `call_command` (I20).

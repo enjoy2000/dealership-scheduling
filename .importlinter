@@ -49,7 +49,6 @@ forbidden_modules =
     contexts.catalog
 ignore_imports =
     contexts.scheduling.infrastructure.catalog_gateway -> contexts.catalog.**
-unmatched_ignore_imports_alerting = none
 
 [importlinter:contract:shared-kernel-is-pure]
 name = Shared kernel imports no framework and no bounded context

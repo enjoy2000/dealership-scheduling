@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Any
 
 import dj_database_url
+import django_stubs_ext
+
+# Lets admin classes use generics like ModelAdmin[Model] at runtime (typed with django-stubs).
+django_stubs_ext.monkeypatch()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -21,6 +25,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "contexts.catalog",
+    "contexts.scheduling.infrastructure.persistence",
 ]
 
 MIDDLEWARE = [
