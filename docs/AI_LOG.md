@@ -202,3 +202,24 @@ Per milestone: intent → what the AI produced → how it was verified → what 
    - k6 on the compose network measured p95 ≈ 9 ms.
 
    Conclusion: Locust on this WSL2 host adds ~120 ms client-side. Recorded numbers use k6, cross-checked with server metrics (I48). Several plausible "fixes" (more workers, caching tweaks) would have been tuned against a phantom.
+
+## Milestone 10 — Docs and demo materials (2026-10-08)
+
+**Intent.** System design document, curl examples, README with AI Collaboration Narrative and load results, plus materials for a Loom walkthrough.
+
+**Produced.**
+- `docs/SYSTEM_DESIGN.md`: deployment, layer, domain-model and booking-sequence diagrams (Mermaid); assumptions; D1–D5; technology choices; reliability; observability; capacity with measured results; GenAI in design.
+- `docs/curl-examples.md`.
+- README: quick start, testing, load results, narrative.
+- `scripts/demo.sh`: a guided, self-resetting 12-step terminal demo. Its date is computed so it never goes stale, and it handles New York DST.
+- `docs/demo/LOOM_SCRIPT.md`: a timed talk track with a pre-recording checklist and troubleshooting.
+- A 9-slide deck published as a claude.ai artifact.
+- CI gained a migration-drift check and a Docker image build.
+
+**Verified.** The demo was rehearsed end to end (`AUTO=1 ./scripts/demo.sh`) against the normal stack. The final gate is green: ruff, `mypy --strict` (139 files), `lint-imports` (5 kept), 258 tests, `makemigrations --check`, and `make schema --validate`.
+
+**Corrected.** The rehearsal caught two demo-script bugs that would have broken the recording:
+- An escaped quote inside a Python f-string (a `SyntaxError`).
+- A `step()` helper ending in `[[ … ]] && echo`, which returned 1 when no subtitle was given and silently stopped the script under `set -e`.
+
+The JSON output was also compacted to fit a video frame.

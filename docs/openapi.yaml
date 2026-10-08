@@ -34,6 +34,10 @@ paths:
                 type: string
                 format: uri
               description: URL of the new appointment.
+            Idempotent-Replayed:
+              schema:
+                type: string
+              description: '`true` when this is a replay of an earlier identical request.'
           content:
             application/json:
               schema:
