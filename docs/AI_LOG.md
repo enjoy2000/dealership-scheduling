@@ -25,3 +25,24 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 - The first draft of the tests imported a helper from `conftest.py`. It was moved to `time_helpers.py`, since importing from conftest is fragile.
 - An untyped test helper failed `mypy --strict` and was annotated.
 - `CancellationNotAllowed` is missing from the spec's domain-error list. It was added deliberately (I5) rather than putting the rule in a view.
+
+## Milestone 3 — Application layer with in-memory fakes (2026-10-08)
+
+**Intent.** Ports, DTOs, `BookAppointmentHandler` (with retry on `ResourceConflict`) and `CancelAppointmentHandler`, all tested against in-memory fakes with no Django.
+
+**Produced.** `application/{ports,dto,errors}.py`, `commands/{book_appointment,cancel_appointment}.py`, `domain/model/references.py`. The fakes in `tests/unit/application/fakes.py` simulate transactions (working copy, commit/rollback) and the DB's exclusion constraints. They can also inject `ResourceConflict`, optionally committing a "concurrent winner" first. The fixture world mirrors the §14.7 seed data.
+
+**Verified.**
+- Tests were written first and failed on import.
+- The unit suite (domain + application) passes with the Django pytest plugin disabled. Coverage is 99% on domain + application, against targets of 90%/85%.
+- Mutation checks, each change applied and then reverted:
+  - Removing the ownership check: 1 test failed.
+  - Disabling the retry: 3 tests failed.
+  - Publishing events before commit: 2 tests failed.
+- Publishing right after `commit()` but still inside the `with` block was *not* caught. On review that is still after commit, so this is correct behaviour, not a test gap.
+- `ruff`, `mypy --strict` and `lint-imports` are clean.
+
+**Corrected.**
+- mypy rejected the fakes against the `UnitOfWork` port because the Protocol declared `appointments`/`resources` as mutable attributes (invariant). They became read-only properties, which is also the correct contract: callers must not swap repositories.
+- Ruff flagged `NotFound` (N818). Unlike the domain errors, this name isn't fixed by the spec, so it was renamed to `NotFoundError` instead of widening the ignore.
+- Removed `type: ignore` comments and in-function imports from the first test draft.
