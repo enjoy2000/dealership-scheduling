@@ -1,12 +1,12 @@
-"""Ports the application layer depends on; infrastructure provides the adapters.
+"""Ports the application layer depends on; infrastructure provides the adapters."""
 
-Idempotency and availability-cache ports arrive with milestones 6 and 7.
-"""
-
+import uuid
 from collections.abc import Sequence
+from datetime import date
 from types import TracebackType
 from typing import Protocol, Self
 
+from contexts.scheduling.application.dto import AppointmentRow, Availability
 from contexts.scheduling.domain.model.references import (
     CustomerRef,
     DealershipCalendar,
@@ -17,13 +17,24 @@ from contexts.scheduling.domain.model.value_objects import (
     CustomerId,
     DealershipId,
     ServiceTypeId,
+    Skill,
+    TimeSlot,
     VehicleId,
 )
 from contexts.scheduling.domain.repositories import AppointmentRepository, ResourceRepository
+from contexts.scheduling.domain.services.availability import DaySchedule
 from shared_kernel.clock import Clock
 from shared_kernel.events import DomainEvent
 
-__all__ = ["CatalogGateway", "Clock", "EventPublisher", "UnitOfWork"]
+__all__ = [
+    "AppointmentReadModel",
+    "AvailabilityCache",
+    "AvailabilityReadModel",
+    "CatalogGateway",
+    "Clock",
+    "EventPublisher",
+    "UnitOfWork",
+]
 
 
 class UnitOfWork(Protocol):
@@ -65,3 +76,29 @@ class EventPublisher(Protocol):
     """Dispatches domain events in-process, called only after commit."""
 
     def publish(self, events: Sequence[DomainEvent]) -> None: ...
+
+
+class AppointmentReadModel(Protocol):
+    """CQRS-lite read side (D5): reads bypass the aggregate."""
+
+    def get(self, appointment_id: uuid.UUID) -> AppointmentRow | None: ...
+
+
+class AvailabilityReadModel(Protocol):
+    def day_schedule(
+        self, dealership_id: DealershipId, skill: Skill, window: TimeSlot
+    ) -> DaySchedule:
+        """All bays and all technicians holding `skill` at the dealership, each with the
+        confirmed appointments overlapping `window`. A small, fixed number of queries."""
+        ...
+
+
+class AvailabilityCache(Protocol):
+    """Short-lived cache of availability listings (A14). Entries may be up to the TTL stale;
+    booking always re-validates against the database."""
+
+    def get(self, dealership_id: int, service_type_id: int, day: date) -> Availability | None: ...
+
+    def set(self, value: Availability) -> None: ...
+
+    def invalidate(self, dealership_id: int, day: date) -> None: ...

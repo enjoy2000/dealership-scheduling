@@ -11,8 +11,11 @@ from django.core.exceptions import ImproperlyConfigured
 
 from contexts.scheduling.application.dto import (
     AppointmentDetails,
+    Availability,
     BookAppointmentCommand,
     CancelAppointmentCommand,
+    GetAppointmentQuery,
+    ListAvailabilityQuery,
 )
 
 
@@ -22,6 +25,12 @@ class SchedulingUseCases(Protocol):
 
     @property
     def cancel_appointment(self) -> Callable[[CancelAppointmentCommand], None]: ...
+
+    @property
+    def get_appointment(self) -> Callable[[GetAppointmentQuery], AppointmentDetails]: ...
+
+    @property
+    def list_availability(self) -> Callable[[ListAvailabilityQuery], Availability]: ...
 
 
 _provider: Callable[[], SchedulingUseCases] | None = None

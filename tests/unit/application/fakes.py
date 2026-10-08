@@ -2,12 +2,15 @@
 constraints so handlers can be tested without PostgreSQL."""
 
 import copy
-from collections.abc import Sequence
+import uuid
+from collections import defaultdict
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from types import TracebackType
 from typing import Self
 
+from contexts.scheduling.application.dto import AppointmentRow, Availability, NamedRef
 from contexts.scheduling.domain.errors import ResourceConflict
 from contexts.scheduling.domain.model.appointment import Appointment
 from contexts.scheduling.domain.model.references import (
@@ -19,13 +22,16 @@ from contexts.scheduling.domain.model.references import (
 from contexts.scheduling.domain.model.resources import ServiceBay, Technician, TechnicianLoad
 from contexts.scheduling.domain.model.value_objects import (
     AppointmentId,
+    BayId,
     CustomerId,
     DealershipId,
     ServiceTypeId,
     Skill,
+    TechnicianId,
     TimeSlot,
     VehicleId,
 )
+from contexts.scheduling.domain.services.availability import DaySchedule
 from shared_kernel.events import DomainEvent
 
 
@@ -192,10 +198,81 @@ class RecordingEventPublisher:
         self._uow = uow
         self.published: list[DomainEvent] = []
         self.published_inside_transaction = False
+        self.subscribers: list[Callable[[DomainEvent], None]] = []
 
     def publish(self, events: Sequence[DomainEvent]) -> None:
         self.published_inside_transaction |= self._uow.in_transaction
         self.published.extend(events)
+        for event in events:
+            for subscriber in self.subscribers:
+                subscriber(event)
+
+
+class FakeAppointmentReadModel:
+    def __init__(self, store: Store) -> None:
+        self._store = store
+
+    def get(self, appointment_id: uuid.UUID) -> AppointmentRow | None:
+        appointment = self._store.appointments.get(AppointmentId(appointment_id))
+        if appointment is None:
+            return None
+        bay = next(b for b in self._store.bays if b.id == appointment.bay_id)
+        tech = next(t for t in self._store.technicians if t.id == appointment.technician_id)
+        return AppointmentRow(
+            id=appointment.id,
+            status=appointment.status.value,
+            start_time=appointment.slot.start,
+            end_time=appointment.slot.end,
+            customer_id=appointment.customer_id,
+            vehicle_id=appointment.vehicle_id,
+            service_type_id=appointment.service_type_id,
+            dealership_id=appointment.dealership_id,
+            technician=NamedRef(tech.id, tech.name),
+            service_bay=NamedRef(bay.id, bay.name),
+        )
+
+
+class FakeAvailabilityReadModel:
+    def __init__(self, store: Store) -> None:
+        self._store = store
+        self.calls = 0
+
+    def day_schedule(
+        self, dealership_id: DealershipId, skill: Skill, window: TimeSlot
+    ) -> DaySchedule:
+        self.calls += 1
+        bay_busy: dict[BayId, list[TimeSlot]] = {
+            b.id: [] for b in self._store.bays if b.dealership_id == dealership_id
+        }
+        tech_busy: dict[TechnicianId, list[TimeSlot]] = {
+            t.id: []
+            for t in self._store.technicians
+            if t.dealership_id == dealership_id and t.is_qualified_for(skill)
+        }
+        for a in self._store.confirmed():
+            if a.dealership_id == dealership_id and a.slot.overlaps(window):
+                if a.bay_id in bay_busy:
+                    bay_busy[a.bay_id].append(a.slot)
+                if a.technician_id in tech_busy:
+                    tech_busy[a.technician_id].append(a.slot)
+        return DaySchedule(bay_busy, tech_busy)
+
+
+class FakeAvailabilityCache:
+    def __init__(self) -> None:
+        self.entries: dict[tuple[int, int, date], Availability] = {}
+        self.invalidations: defaultdict[tuple[int, date], int] = defaultdict(int)
+
+    def get(self, dealership_id: int, service_type_id: int, day: date) -> Availability | None:
+        return self.entries.get((dealership_id, service_type_id, day))
+
+    def set(self, value: Availability) -> None:
+        self.entries[(value.dealership_id, value.service_type_id, value.date)] = value
+
+    def invalidate(self, dealership_id: int, day: date) -> None:
+        self.invalidations[(dealership_id, day)] += 1
+        for key in [k for k in self.entries if (k[0], k[2]) == (dealership_id, day)]:
+            del self.entries[key]
 
 
 class RecordingSleep:

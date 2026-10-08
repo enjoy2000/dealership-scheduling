@@ -11,15 +11,25 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
-from contexts.scheduling.application.dto import BookAppointmentCommand, CancelAppointmentCommand
+from contexts.scheduling.application.dto import (
+    BookAppointmentCommand,
+    CancelAppointmentCommand,
+    GetAppointmentQuery,
+    ListAvailabilityQuery,
+)
 from contexts.scheduling.interface.api.dependencies import use_cases
 from contexts.scheduling.interface.api.serializers import (
     AppointmentSerializer,
+    AvailabilityQuerySerializer,
+    AvailabilitySerializer,
     BookAppointmentRequestSerializer,
     ProblemSerializer,
     ValidationProblemSerializer,
 )
-from contexts.scheduling.interface.api.throttles import BookingRateThrottle
+from contexts.scheduling.interface.api.throttles import (
+    AvailabilityRateThrottle,
+    BookingRateThrottle,
+)
 
 IDEMPOTENCY_HEADER = "Idempotency-Key"
 MAX_IDEMPOTENCY_KEY_LENGTH = 255
@@ -90,6 +100,16 @@ class AppointmentCollectionView(APIView):
 
 class AppointmentDetailView(APIView):
     @extend_schema(
+        operation_id="get_appointment",
+        summary="Fetch an appointment",
+        responses={200: AppointmentSerializer, 404: _problem("Unknown appointment.")},
+        tags=["appointments"],
+    )
+    def get(self, request: Request, id: uuid.UUID) -> Response:
+        details = use_cases().get_appointment(GetAppointmentQuery(id))
+        return Response(AppointmentSerializer(details).data)
+
+    @extend_schema(
         operation_id="cancel_appointment",
         summary="Cancel an appointment",
         description=(
@@ -106,3 +126,30 @@ class AppointmentDetailView(APIView):
     def delete(self, request: Request, id: uuid.UUID) -> Response:
         use_cases().cancel_appointment(CancelAppointmentCommand(id))
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AvailabilityView(APIView):
+    throttle_classes = (AvailabilityRateThrottle,)
+
+    @extend_schema(
+        operation_id="list_availability",
+        summary="List bookable start times",
+        description=(
+            "Start times on the dealership-local `date` for which a bay and a qualified "
+            "technician are free for the whole service. May be up to "
+            "AVAILABILITY_CACHE_TTL_SECONDS stale; booking always re-validates."
+        ),
+        parameters=[AvailabilityQuerySerializer],
+        responses={
+            200: AvailabilitySerializer,
+            400: OpenApiResponse(ValidationProblemSerializer, description="Malformed query."),
+            404: _problem("Unknown dealership or service type."),
+            429: _problem("Too many requests."),
+        },
+        tags=["availability"],
+    )
+    def get(self, request: Request) -> Response:
+        params = AvailabilityQuerySerializer(data=request.query_params)
+        params.is_valid(raise_exception=True)
+        result = use_cases().list_availability(ListAvailabilityQuery(**params.validated_data))
+        return Response(AvailabilitySerializer(result).data)

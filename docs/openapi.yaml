@@ -70,6 +70,31 @@ paths:
                 $ref: '#/components/schemas/Problem'
           description: Too many requests.
   /api/v1/appointments/{id}/:
+    get:
+      operationId: get_appointment
+      summary: Fetch an appointment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - appointments
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Unknown appointment.
     delete:
       operationId: cancel_appointment
       description: 'Frees the bay and technician. Allowed only before the start time.
@@ -99,6 +124,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
           description: The appointment has already started.
+  /api/v1/availability/:
+    get:
+      operationId: list_availability
+      description: Start times on the dealership-local `date` for which a bay and
+        a qualified technician are free for the whole service. May be up to AVAILABILITY_CACHE_TTL_SECONDS
+        stale; booking always re-validates.
+      summary: List bookable start times
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+        description: Dealership-local day.
+        required: true
+      - in: query
+        name: dealership_id
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - in: query
+        name: service_type_id
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      tags:
+      - availability
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Availability'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+          description: Malformed query.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Unknown dealership or service type.
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Too many requests.
 components:
   schemas:
     Appointment:
@@ -138,6 +217,37 @@ components:
       - status
       - technician
       - vehicle
+    Availability:
+      type: object
+      properties:
+        dealership_id:
+          type: integer
+        service_type_id:
+          type: integer
+        date:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailableSlot'
+      required:
+      - date
+      - dealership_id
+      - service_type_id
+      - slots
+    AvailableSlot:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+      required:
+      - end_time
+      - start_time
     BookAppointmentRequestRequest:
       type: object
       properties:

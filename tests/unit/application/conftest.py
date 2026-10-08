@@ -10,6 +10,9 @@ import pytest
 
 from contexts.scheduling.application.commands.book_appointment import BookAppointmentHandler
 from contexts.scheduling.application.commands.cancel_appointment import CancelAppointmentHandler
+from contexts.scheduling.application.event_handlers import InvalidateAvailability
+from contexts.scheduling.application.queries.get_appointment import GetAppointmentHandler
+from contexts.scheduling.application.queries.list_availability import ListAvailabilityHandler
 from contexts.scheduling.domain.model.references import (
     CustomerRef,
     DealershipCalendar,
@@ -30,6 +33,9 @@ from contexts.scheduling.domain.model.value_objects import (
     Vin,
 )
 from tests.unit.application.fakes import (
+    FakeAppointmentReadModel,
+    FakeAvailabilityCache,
+    FakeAvailabilityReadModel,
     FakeCatalogGateway,
     FakeUnitOfWork,
     FixedClock,
@@ -122,6 +128,10 @@ class World:
     sleep: RecordingSleep
     book: BookAppointmentHandler
     cancel: CancelAppointmentHandler
+    get_appointment: GetAppointmentHandler
+    list_availability: ListAvailabilityHandler
+    availability_cache: FakeAvailabilityCache
+    availability_read_model: FakeAvailabilityReadModel
 
 
 @pytest.fixture
@@ -143,4 +153,26 @@ def world() -> World:
         new_id=lambda: AppointmentId(uuid.UUID(int=next(counter))),
     )
     cancel = CancelAppointmentHandler(uow=uow, clock=clock, events=publisher)
-    return World(store, uow, catalog, clock, publisher, sleep, book, cancel)
+    cache = FakeAvailabilityCache()
+    availability_read_model = FakeAvailabilityReadModel(store)
+    publisher.subscribers.append(InvalidateAvailability(cache=cache, catalog=catalog))
+    get_appointment = GetAppointmentHandler(
+        read_model=FakeAppointmentReadModel(store), catalog=catalog
+    )
+    list_availability = ListAvailabilityHandler(
+        read_model=availability_read_model, catalog=catalog, cache=cache, clock=clock
+    )
+    return World(
+        store,
+        uow,
+        catalog,
+        clock,
+        publisher,
+        sleep,
+        book,
+        cancel,
+        get_appointment,
+        list_availability,
+        cache,
+        availability_read_model,
+    )

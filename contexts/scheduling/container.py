@@ -12,10 +12,19 @@ from django.conf import settings
 
 from contexts.scheduling.application.commands.book_appointment import BookAppointmentHandler
 from contexts.scheduling.application.commands.cancel_appointment import CancelAppointmentHandler
+from contexts.scheduling.application.event_handlers import InvalidateAvailability
 from contexts.scheduling.application.ports import Clock
+from contexts.scheduling.application.queries.get_appointment import GetAppointmentHandler
+from contexts.scheduling.application.queries.list_availability import ListAvailabilityHandler
+from contexts.scheduling.domain.events import AppointmentCancelled, AppointmentConfirmed
+from contexts.scheduling.infrastructure.cache import DjangoAvailabilityCache
 from contexts.scheduling.infrastructure.catalog_gateway import DjangoCatalogGateway
 from contexts.scheduling.infrastructure.clock import SystemClock
 from contexts.scheduling.infrastructure.event_publisher import InProcessEventPublisher
+from contexts.scheduling.infrastructure.persistence.read_models import (
+    DjangoAppointmentReadModel,
+    DjangoAvailabilityReadModel,
+)
 from contexts.scheduling.infrastructure.persistence.unit_of_work import DjangoUnitOfWork
 
 
@@ -28,6 +37,10 @@ class Container:
         self.uow = DjangoUnitOfWork()
         self.catalog = DjangoCatalogGateway()
         self.events = InProcessEventPublisher()
+        self.availability_cache = DjangoAvailabilityCache(settings.AVAILABILITY_CACHE_TTL_SECONDS)
+        invalidate = InvalidateAvailability(cache=self.availability_cache, catalog=self.catalog)
+        self.events.subscribe(AppointmentConfirmed, invalidate)
+        self.events.subscribe(AppointmentCancelled, invalidate)
 
     @cached_property
     def book_appointment(self) -> BookAppointmentHandler:
@@ -43,6 +56,19 @@ class Container:
     @cached_property
     def cancel_appointment(self) -> CancelAppointmentHandler:
         return CancelAppointmentHandler(uow=self.uow, clock=self.clock, events=self.events)
+
+    @cached_property
+    def get_appointment(self) -> GetAppointmentHandler:
+        return GetAppointmentHandler(read_model=DjangoAppointmentReadModel(), catalog=self.catalog)
+
+    @cached_property
+    def list_availability(self) -> ListAvailabilityHandler:
+        return ListAvailabilityHandler(
+            read_model=DjangoAvailabilityReadModel(),
+            catalog=self.catalog,
+            cache=self.availability_cache,
+            clock=self.clock,
+        )
 
 
 _container: Container | None = None

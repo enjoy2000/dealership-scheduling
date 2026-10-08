@@ -108,3 +108,26 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 - `OpenApiResponse(response_headers=...)` does not exist in drf-spectacular. The test run caught it, and response headers are now declared as `OpenApiParameter(..., response=[201])`.
 - `default_error_messages` override failed type-checking. Replaced with an explicit `ValidationError`.
 - Renamed `IdempotencyConflict` to `IdempotencyConflictError` for consistency with `NotFoundError`.
+
+## Milestone 6 — Queries and remaining endpoints (2026-10-08)
+
+**Intent.** Availability read model + cache (A14), `GET /appointments/{id}/`, `GET /availability/`. Cancel was already done in M5.
+
+**Produced.**
+- Domain `services/availability.py`.
+- Application: `queries/{get_appointment,list_availability}.py`, `event_handlers.py`, read-model and cache ports.
+- Infrastructure: `persistence/read_models.py` and `cache.py` (versioned keys).
+- Views, serializers and the route for availability.
+
+**Verified.**
+- Tests first at each layer:
+  - 8 domain tests for the calculator (grid, past starts, back-to-back, off-grid opening, qualified-only).
+  - 9 application tests with fakes (caching, targeted invalidation, 404 not cached).
+  - 6 infrastructure tests (projection, fixed 3-query day schedule, cache invalidation scope, TTL 0).
+  - 14 API tests. The key one is a **brute-force check of §7 rule 13**: for every grid start of the day, "offered by availability" equals "a real booking succeeds". Others: cache hit = 0 queries, stale-but-revalidated booking (A14), and real-commit invalidation on book and cancel.
+- Live in compose (Redis): 31 slots → book → 25 → cancel → 31.
+- 227 tests passing. `ruff`, `mypy --strict` and `lint-imports` (5 kept) are clean.
+
+**Corrected.**
+- The invalidation API test failed at first. pytest-django wraps tests in a transaction, so `transaction.on_commit` (the after-commit dispatch from I32) never fired. This was not a production bug: requests run in autocommit, so the unit of work's atomic block is outermost and commits. The test now runs with `transaction=True`, so it proves the real commit path instead of faking it.
+- `assert` used for a runtime invariant in the query handler (assertions vanish under `-O`) was replaced with an explicit `LookupError`.

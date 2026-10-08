@@ -57,6 +57,24 @@ class AppointmentSerializer(serializers.Serializer[Any]):
     service_bay = NamedRefSerializer()
 
 
+class AvailabilityQuerySerializer(serializers.Serializer[Any]):
+    dealership_id = serializers.IntegerField(min_value=1)
+    service_type_id = serializers.IntegerField(min_value=1)
+    date = serializers.DateField(input_formats=["iso-8601"], help_text="Dealership-local day.")
+
+
+class AvailableSlotSerializer(serializers.Serializer[Any]):
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+
+
+class AvailabilitySerializer(serializers.Serializer[Any]):
+    dealership_id = serializers.IntegerField()
+    service_type_id = serializers.IntegerField()
+    date = serializers.DateField()
+    slots = AvailableSlotSerializer(many=True)
+
+
 class ProblemSerializer(serializers.Serializer[Any]):
     """RFC 7807 problem details (SPEC §14.2)."""
 
