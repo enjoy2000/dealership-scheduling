@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: Unified Service Scheduler API
+  version: 1.0.0
+  description: Books a service bay and a qualified technician for a dealership appointment.
+    Errors use application/problem+json (RFC 7807).
+paths:
+  /api/v1/appointments/:
+    post:
+      operationId: book_appointment
+      description: Confirms the appointment only if a service bay and a qualified
+        technician are both free for the whole service duration. Idempotent via `Idempotency-Key`.
+      summary: Book an appointment
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        schema:
+          type: string
+        description: Client-generated key (e.g. a UUID). Retained for 24 hours.
+        required: true
+      tags:
+      - appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookAppointmentRequestRequest'
+        required: true
+      responses:
+        '201':
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL of the new appointment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: Appointment confirmed.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+          description: Malformed request.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Unknown customer, vehicle, service type or dealership.
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: No capacity, vehicle already booked, or idempotency conflict.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Invalid slot, outside opening hours, or vehicle not owned.
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Too many requests.
+  /api/v1/appointments/{id}/:
+    delete:
+      operationId: cancel_appointment
+      description: 'Frees the bay and technician. Allowed only before the start time.
+        Idempotent: cancelling an already cancelled appointment also returns 204.'
+      summary: Cancel an appointment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - appointments
+      responses:
+        '204':
+          description: Cancelled (or already cancelled).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: Unknown appointment.
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+          description: The appointment has already started.
+components:
+  schemas:
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        customer:
+          $ref: '#/components/schemas/NamedRef'
+        vehicle:
+          $ref: '#/components/schemas/VehicleSummary'
+        service_type:
+          $ref: '#/components/schemas/ServiceTypeSummary'
+        dealership:
+          $ref: '#/components/schemas/NamedRef'
+        technician:
+          $ref: '#/components/schemas/NamedRef'
+        service_bay:
+          $ref: '#/components/schemas/NamedRef'
+      required:
+      - customer
+      - dealership
+      - end_time
+      - id
+      - service_bay
+      - service_type
+      - start_time
+      - status
+      - technician
+      - vehicle
+    BookAppointmentRequestRequest:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+          minimum: 1
+        vehicle_id:
+          type: integer
+          minimum: 1
+        service_type_id:
+          type: integer
+          minimum: 1
+        dealership_id:
+          type: integer
+          minimum: 1
+        start_time:
+          type: string
+          format: date-time
+          description: UTC, on the 15-minute grid, e.g. 2026-11-02T09:00:00Z
+      required:
+      - customer_id
+      - dealership_id
+      - service_type_id
+      - start_time
+      - vehicle_id
+    NamedRef:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    Problem:
+      type: object
+      description: RFC 7807 problem details (SPEC §14.2).
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        correlation_id:
+          type: string
+          nullable: true
+      required:
+      - code
+      - correlation_id
+      - detail
+      - status
+      - title
+      - type
+    ServiceTypeSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        duration_minutes:
+          type: integer
+      required:
+      - duration_minutes
+      - id
+      - name
+    StatusEnum:
+      enum:
+      - CONFIRMED
+      - CANCELLED
+      type: string
+      description: |-
+        * `CONFIRMED` - CONFIRMED
+        * `CANCELLED` - CANCELLED
+    ValidationProblem:
+      type: object
+      description: |-
+        Adds `errors` (field name to messages). Declared in `get_fields` because a class
+        attribute named `errors` would shadow `Serializer.errors`.
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        correlation_id:
+          type: string
+          nullable: true
+        errors:
+          type: object
+          additionalProperties: {}
+          description: Field name to list of messages.
+      required:
+      - code
+      - correlation_id
+      - detail
+      - errors
+      - status
+      - title
+      - type
+    VehicleSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        vin:
+          type: string
+      required:
+      - id
+      - vin

@@ -10,3 +10,12 @@ class NotFoundError(Exception):
         super().__init__(f"Unknown {resource.replace('_', ' ')}: {identifier}.")
         self.resource = resource
         self.identifier = identifier
+
+
+class IdempotencyConflictError(Exception):
+    """The Idempotency-Key was already used with a different payload, or is in flight."""
+
+    code = "idempotency_conflict"
+
+    def __init__(self, message: str = "The Idempotency-Key was already used.") -> None:
+        super().__init__(message)

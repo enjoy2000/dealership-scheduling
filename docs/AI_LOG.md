@@ -81,3 +81,30 @@ Per milestone: intent → what the AI produced → how it was verified → what 
 - Django admin generics (`ModelAdmin[Model]`) crashed at runtime without `django_stubs_ext.monkeypatch()`. Fixed by adding the dependency (I25).
 - Ruff RUF012 flagged list-valued `Meta.constraints`/`inlines`. The AI's first automated fix, a regex rewrite to tuples, dropped the trailing comma on single-element lists, so `constraints = (X)` became a bare object. Ruff stayed green; the **mypy Django plugin crashed** on it (`'CheckConstraint' object is not iterable`). The five spots were fixed by hand, and `makemigrations --check` confirmed no schema drift. Lesson: blind mechanical rewrites need a semantic check, and the typed toolchain provided one.
 - The first seeding design had a shared helper module in Catalog that Scheduling would have imported. It was replaced by per-context commands composed via `call_command` (I20).
+
+## Milestone 5 — Interface (2026-10-08)
+
+**Intent.** DRF views/serializers, problem-details mapping, composition root, OpenAPI via drf-spectacular. RESTful: `201` + `Location`, `204` on cancel.
+
+**Produced.**
+- `container.py` (composition root).
+- `interface/api/{views,serializers,problem_details,throttles,urls,dependencies}.py`.
+- Infrastructure `clock.py`, `event_publisher.py` (after-commit dispatch), and a correlation-id middleware.
+- Swagger UI at `/api/v1/docs/` and the schema at `/api/v1/schema/`, exported to `docs/openapi.yaml` (`make schema`, validated).
+
+**Verified.**
+- 38 API tests through the DRF client on Postgres cover:
+  - every booking/cancel criterion of §7 (rules 2, 3, 4, 6, 7, 9, 10, 11, 12)
+  - problem+json shape and correlation-id echo
+  - a `500` that does not leak internals
+  - per-customer throttling with `Retry-After`
+- An OpenAPI contract test validates `201`/`400`/`404`/`422` bodies against the generated component schemas, and checks that `Idempotency-Key` (required header), `Location` and `204` are documented.
+- Live check against `docker compose`: curl gives `201` + `Location`, then `409 no_capacity` for the overlapping request.
+- Full suite: 188 passed. `ruff`, `mypy --strict`, `lint-imports` (5 kept) are clean.
+
+**Corrected.**
+- **Layer violation caught by import-linter:** the first views imported `container.py`, which the M1 contract forbids (container sits above interface). Editing `.importlinter` would have been the quick fix, and is exactly what CLAUDE.md forbids. Dependency inversion was used instead (I27).
+- **Shadowed DRF API:** a serializer field named `errors` silently shadowed `Serializer.errors`. mypy caught it, and it is now declared in `get_fields()`.
+- `OpenApiResponse(response_headers=...)` does not exist in drf-spectacular. The test run caught it, and response headers are now declared as `OpenApiParameter(..., response=[201])`.
+- `default_error_messages` override failed type-checking. Replaced with an explicit `ValidationError`.
+- Renamed `IdempotencyConflict` to `IdempotencyConflictError` for consistency with `NotFoundError`.

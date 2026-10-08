@@ -64,4 +64,5 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             for sql in connection.ops.sequence_reset_sql(no_style(), models):
                 cursor.execute(sql)
-        self.stdout.write(self.style.SUCCESS("Catalog seeded."))
+        if options["verbosity"]:
+            self.stdout.write(self.style.SUCCESS("Catalog seeded."))

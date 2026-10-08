@@ -25,11 +25,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "rest_framework",
+    "drf_spectacular",
     "contexts.catalog",
     "contexts.scheduling.infrastructure.persistence",
 ]
 
 MIDDLEWARE = [
+    "contexts.scheduling.infrastructure.telemetry.middleware.CorrelationIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -90,6 +92,27 @@ REST_FRAMEWORK: dict[str, Any] = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "EXCEPTION_HANDLER": "contexts.scheduling.interface.api.problem_details.exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DATETIME_FORMAT": "%Y-%m-%dT%H:%M:%SZ",
+    "DEFAULT_THROTTLE_RATES": {
+        "booking": os.environ.get("THROTTLE_BOOKING_RATE", "60/min"),
+        "availability": os.environ.get("THROTTLE_AVAILABILITY_RATE", "120/min"),
+    },
+    "NUM_PROXIES": int(os.environ.get("NUM_PROXIES", "0")),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Unified Service Scheduler API",
+    "DESCRIPTION": (
+        "Books a service bay and a qualified technician for a dealership appointment. "
+        "Errors use application/problem+json (RFC 7807)."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 # Scheduling tunables (SPEC §14.6).
